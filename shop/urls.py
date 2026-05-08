@@ -16,4 +16,8 @@ urlpatterns = [
     path("change_password/", views.change_password, name="change_password"),
     path("login/", views.Login, name="login"),
     path("logout/", views.Logout, name="logout"),
+    
+    path("wishlist/", views.wishlist, name="wishlist"),
+    path("add_wishlist/<int:myid>/", views.add_wishlist, name="add_wishlist"),
+    path("profile/", views.profile, name="profile"),
 ]

@@ -1,40 +1,88 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} Online Shopping {% endblock %}
-{% block css %}
-{% endblock %}
-{% block body %}
+{% block title %}Shopvexael | Explore Premium Products{% endblock %}
 
-<div class="container mt-2 mb-3">
-
-  <div class="row">
-    {% for product in products %}
-    <div class="col-lg-4 my-4">
-      <div class="card shadow align-items-center" style="width: 20rem; height: 25rem;">
-        <img src="/media/{{product.image}}" class="card-img-top" style="width: 170px; height: 260px;" alt="...">
-        <div class="card-body">
-          <h5 class="card-title">{{product.name}}</h5>
-          <hr>
-          {% if request.user.is_authenticated %}
-          <button data-product="{{product.id}}" data-action="add" class="btn add-btn update-cart"
-            style="background-color: #8c5d4f; color: white;">Add To Cart</button>
-          <a href="/product_view/{{product.id}}/" class="btn btn-outline-secondary">View</a>
-          {% else %}
-          <button class="btn" style="background-color: #8c5d4f; color: white;">Login to add the item</button>
-          {% endif %}
-          <h4 style="display: inline-block; float: right;">&nbsp;₹{{product.price}}</h4>
-        </div>
-      </div>
+{% block sidebar %}
+<aside class="sidebar">
+    <div class="sidebar-section">
+        <h3>Categories</h3>
+        <ul class="sidebar-list">
+            <li><a href="/">All Categories</a></li>
+            {% for category in categories %}
+            <li><a href="/?category={{ category.id }}">{{ category.name }}</a></li>
+            {% endfor %}
+        </ul>
     </div>
-    {% endfor %}
-  </div>
-</div>
+
+    <div class="sidebar-section">
+        <h3>Brands</h3>
+        <ul class="sidebar-list">
+            {% for brand in brands %}
+            <li><a href="/?brand={{ brand.id }}">{{ brand.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="sidebar-section">
+        <h3>Price Range</h3>
+        <ul class="sidebar-list">
+            <li><a href="/?price_max=500">Under ₹500</a></li>
+            <li><a href="/?price_min=500&price_max=1000">₹500 - ₹1000</a></li>
+            <li><a href="/?price_min=1000&price_max=5000">₹1000 - ₹5000</a></li>
+            <li><a href="/?price_min=5000">Over ₹5000</a></li>
+        </ul>
+    </div>
+</aside>
 {% endblock %}
-{% block js %}
-<script>
-{% if alert %}
-  alert("Logout Sucessfull.")
-  window.location.href = '/'
-{% endif %}
-</script>
+
+{% block body %}
+<div class="hero-banner">
+    <div>
+        <h1 style="margin:0; font-size: 3rem;">Welcome to Shop<span style="color:var(--accent-gold)">vexael</span></h1>
+        <p style="font-size: 1.2rem; font-weight: normal; margin-top:10px;">Premium Products. Unbeatable Prices.</p>
+    </div>
+</div>
+
+<div style="padding: 20px;">
+    {% if query %}
+        <h2>Search Results for "{{ query }}"</h2>
+    {% else %}
+        <h2>Trending Products</h2>
+    {% endif %}
+    
+    {% if products %}
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="product-card">
+            <a href="/product_view/{{product.id}}/" style="text-decoration:none;">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}">
+                {% else %}
+                    <div class="product-image" style="display:flex; align-items:center; justify-content:center; background:#ccc; color:#333;">No Image</div>
+                {% endif %}
+            </a>
+            <div class="product-info">
+                <a href="/product_view/{{product.id}}/" style="text-decoration:none;">
+                    <h3 class="product-title">{{product.name}}</h3>
+                </a>
+                <div class="product-price">
+                    ₹{{product.final_price}}
+                    {% if product.discount_price %}
+                    <span class="original">₹{{product.price}}</span>
+                    {% endif %}
+                </div>
+                
+                {% if request.user.is_authenticated %}
+                <button data-product="{{product.id}}" data-action="add" class="btn-primary update-cart">Add To Cart</button>
+                {% else %}
+                <a href="/login/" class="btn-primary" style="text-align:center; text-decoration:none; display:block;">Login to Buy</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>No products found matching your criteria.</p>
+    {% endif %}
+</div>
 {% endblock %}

@@ -1,53 +1,72 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} Shopping Cart {% endblock %}
+{% block title %}Shopvexael | Your Cart{% endblock %}
 
-{% block css %}
-{% endblock %}
 {% block body %}
-<div class="container-fluid row">
-    <div class="col-lg-12">
-        <div class="box-element">
-            <a href="/" class="btn btn-outline-dark">&#x2190 Continue Shopping</a>
-            <br><br>
-            <table class="table">
-                <tr>
-                    <th>
-                        <h5>Items: <strong>{{order.get_cart_items}}</strong></h5>
-                    </th>
-                    <th>
-                        <h5>Total: <strong>₹{{order.get_cart_total}}</strong></h5>
-                    </th>
-                    <th><a href="/checkout/" class="btn btn-success" style="float: right; margin: 5px;">Checkout</a>
-                    </th>
-                </tr>
-            </table>
+<div style="padding: 40px 20px; max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Shopping Cart</h2>
+        <a href="/" class="btn-primary" style="width: auto; background: transparent; border: 1px solid var(--accent-gold); color: var(--accent-gold);">Continue Shopping</a>
+    </div>
+
+    {% if items %}
+    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+        
+        <!-- Cart Items -->
+        <div style="flex: 2; min-width: 300px;">
+            <div class="product-card" style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: 2fr 3fr 1fr 1fr 1fr; gap: 10px; font-weight: bold; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px;">
+                    <div>Image</div>
+                    <div>Item</div>
+                    <div>Price</div>
+                    <div>Quantity</div>
+                    <div>Total</div>
+                </div>
+
+                {% for item in items %}
+                <div style="display: grid; grid-template-columns: 2fr 3fr 1fr 1fr 1fr; gap: 10px; align-items: center; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <div>
+                        <img src="{{item.product.image.url}}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" alt="{{item.product.name}}">
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; font-size: 1.1rem;"><a href="/product_view/{{item.product.id}}/" style="color:var(--text-primary); text-decoration:none;">{{item.product.name}}</a></h4>
+                    </div>
+                    <div style="color: var(--accent-gold);">₹{{item.product.final_price}}</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button data-product="{{item.product.id}}" data-action="remove" class="update-cart" style="background:var(--bg-card-hover); color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">-</button>
+                        <span>{{item.quantity}}</span>
+                        <button data-product="{{item.product.id}}" data-action="add" class="update-cart" style="background:var(--bg-card-hover); color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px;">+</button>
+                    </div>
+                    <div style="font-weight: bold;">₹{{item.get_total}}</div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-<br>
-        <div class="box-element">
-            <div class="cart-row">
-                <div style="flex: 2;"><strong>Image</strong></div>
-                <div style="flex: 2;"><strong>Item</strong></div>
-                <div style="flex: 1;"><strong>Price</strong></div>
-                <div style="flex: 1;"><strong>Quantity</strong></div>
-                <div style="flex: 1;"><strong>Total</strong></div>
-            </div>
-        {% for item in items %}
-            <div class="cart-row">
-                <div style="flex: 2;"><img class="row-image" src="{{item.product.image.url}}" alt=""></div>
-                <div style="flex: 2;">{{item.product.name}}</div>
-                <div style="flex: 1;">₹{{item.product.price}}</div>
-                <div style="flex: 1;">
-                <p class="quantity">{{item.quantity}}</p>
-                <div class="quantity">
-                    <img data-product="{{item.product.id}}" data-action="add" src="{% static 'increase.png' %}" class="chg-quantity update-cart" alt="">
-                    <img data-product="{{item.product.id}}" data-action="remove" src="{% static 'decrease.png' %}" class="chg-quantity update-cart" alt="">
+
+        <!-- Order Summary -->
+        <div style="flex: 1; min-width: 300px;">
+            <div class="product-card" style="padding: 20px;">
+                <h3>Order Summary</h3>
+                <hr style="border-color: var(--border-color);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1.1rem;">
+                    <span>Total Items:</span>
+                    <strong>{{order.get_cart_items}}</strong>
                 </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 1.3rem;">
+                    <span>Order Total:</span>
+                    <strong style="color: var(--accent-gold);">₹{{order.get_cart_total}}</strong>
                 </div>
-                <div style="flex: 1;">₹{{item.get_total}}</div>
+                <a href="/checkout/" class="btn-primary" style="display: block; text-align: center; text-decoration: none;">Proceed to Checkout</a>
             </div>
-            {% endfor %}
         </div>
     </div>
+    {% else %}
+    <div class="product-card" style="padding: 50px; text-align: center;">
+        <i class="fas fa-shopping-cart" style="font-size: 4rem; color: var(--text-secondary); margin-bottom: 20px;"></i>
+        <h3>Your Cart is Empty</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 30px;">Looks like you haven't added anything to your cart yet.</p>
+        <a href="/" class="btn-primary" style="width: auto; padding: 10px 30px; text-decoration: none;">Start Shopping</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

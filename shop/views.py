@@ -7,14 +7,56 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from . inherit import cartData
 
+from django.db.models import Q
+
 def index(request):
     data = cartData(request)
-    items = data['items']
-    order = data['order']
     cartItems = data['cartItems']
-
+    
     products = Product.objects.all()
-    return render(request, "index.html", {'products':products, 'cartItems':cartItems})
+    categories = Category.objects.all()
+    brands = Brand.objects.all()
+    
+    # Filtering
+    category_id = request.GET.get('category')
+    brand_id = request.GET.get('brand')
+    price_min = request.GET.get('price_min')
+    price_max = request.GET.get('price_max')
+    query = request.GET.get('q')
+    sort = request.GET.get('sort')
+    discount = request.GET.get('discount')
+    
+    if query:
+        products = products.filter(Q(name__icontains=query) | Q(description__icontains=query))
+    if category_id:
+        products = products.filter(category_id=category_id)
+    if brand_id:
+        products = products.filter(brand_id=brand_id)
+    if price_min:
+        products = products.filter(price__gte=price_min)
+    if price_max:
+        products = products.filter(price__lte=price_max)
+    if discount:
+        products = products.exclude(discount_price__isnull=True)
+        
+    # Sorting
+    if sort == 'new':
+        products = products.order_by('-date_added')
+    elif sort == 'popular':
+        products = products.order_by('-views_count')
+    elif sort == 'price_asc':
+        products = products.order_by('price')
+    elif sort == 'price_desc':
+        products = products.order_by('-price')
+        
+    context = {
+        'products': products, 
+        'cartItems': cartItems,
+        'categories': categories,
+        'brands': brands,
+        'query': query
+    }
+    return render(request, "index.html", context)
 
 def cart(request):
     data = cartData(request)
@@ -118,16 +160,8 @@ def product_view(request, myid):
     return render(request, "product_view.html", {'product':product, 'cartItems':cartItems, 'feature':feature, 'reviews':reviews})
 
 def search(request):
-    data = cartData(request)
-    items = data['items']
-    order = data['order']
-    cartItems = data['cartItems']
-    if request.method == "POST":
-        search = request.POST['search']
-        products = Product.objects.filter(name__contains=search)
-        return render(request, "search.html", {'search':search, 'products':products, 'cartItems':cartItems})
-    else:
-        return render(request, "search.html")
+    # Redirect to index for all filtering and searching logic
+    return redirect(f"/?q={request.GET.get('q', '')}")
 
 
 def change_password(request):
@@ -243,3 +277,28 @@ def Logout(request):
     logout(request)
     alert = True
     return render(request, "index.html", {'alert':alert})
+def wishlist(request):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+    data = cartData(request)
+    cartItems = data['cartItems']
+    customer = request.user.customer
+    w_items = Wishlist.objects.filter(customer=customer)
+    return render(request, 'wishlist.html', {'w_items': w_items, 'cartItems': cartItems})
+
+def add_wishlist(request, myid):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+    product = Product.objects.get(id=myid)
+    Wishlist.objects.get_or_create(customer=request.user.customer, product=product)
+    return redirect(f'/product_view/{myid}/')
+
+def profile(request):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+    data = cartData(request)
+    cartItems = data['cartItems']
+    customer = request.user.customer
+    orders = Order.objects.filter(customer=customer).order_by('-date_ordered')
+    return render(request, 'profile.html', {'orders': orders, 'cartItems': cartItems, 'customer': customer})
+

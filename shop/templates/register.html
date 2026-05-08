@@ -1,60 +1,56 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} Register {% endblock %}
+{% block title %}Shopvexael | Register{% endblock %}
 
-{% block css %}
-{% endblock %}
 {% block body %}
-<form class="container mt-4" method="POST">
-    {% csrf_token %}
-
-    <div class="row">
-        <div class="form-group col-md-12">
-            <label>Full Name</label>
-            <input type="text" class="form-control" name="full_name" id="full_name" placeholder="Enter Full Name" required>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="form-group col-md-6">
-            <label>Email Id</label>
-            <input type="email" class="form-control" name="email" id="email" placeholder="Enter Email Id" required>
-        </div>
-        <div class="form-group col-md-6">
-            <label>Contact Number</label>
-            <input type="tel" class="form-control" name="phone_number" id="phone_number" placeholder="Enter Contact Number" required>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="form-group col-md-12">
-            <label>Username</label>
-            <input type="text" class="form-control" name="username" id="username" placeholder="Enter Username" required>
-        </div>
-    </div>
+<div class="auth-container" style="max-width: 500px;">
+    <h2 style="text-align: center; margin-bottom: 30px;">Create an Account</h2>
     
-    <div class="row mt-4">
-        <div class="form-group col-md-6">
-            <label>Password</label>
-            <input type="password" class="form-control" name="password1" id="password1" placeholder="Enter Password" required>
-        </div>
-        <div class="form-group col-md-6">
-            <label>Confirm Password</label>
-            <input type="password" class="form-control" name="password2" id="password2" placeholder="Confirm Password" required>
-        </div>
+    {% if alert %}
+    <div style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red); padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: center; border: 1px solid var(--accent-red);">
+        Passwords do not match. Please try again.
     </div>
+    {% endif %}
 
+    <form method="POST"> 
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <input type="text" class="form-control" id="full_name" name="full_name" placeholder="John Doe" required>
+        </div>
+        
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="johndoe123" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="phone_number">Phone Number</label>
+                <input type="text" class="form-control" id="phone_number" name="phone_number" placeholder="555-0000" required>
+            </div>
+        </div>
 
-    <input type="submit" value="Submit" class="btn mt-4" style="background-color: #8c5d4f; color: white; font-size: larger; width: 9rem;">
-</form>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="example@email.com" required>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label for="password1">Password</label>
+                <input type="password" class="form-control" id="password1" name="password1" placeholder="••••••••" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="password2">Confirm Password</label>
+                <input type="password" class="form-control" id="password2" name="password2" placeholder="••••••••" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; font-size: 1.1rem; margin-top: 10px;">Register</button>
+    </form>
+    
+    <div style="text-align: center; margin-top: 20px; font-size: 0.9rem;">
+        Already have an account? <a href="/login/" style="color: var(--accent-gold); text-decoration: none;">Sign in</a>
+    </div>
+</div>
 {% endblock %}
-{% block js %}
-<script>
-{% if alert %}
-alert("Passwords do not match each other");
-document.location = "/register"
-{% endif %}
-</script>
-{% endblock %}
-
-

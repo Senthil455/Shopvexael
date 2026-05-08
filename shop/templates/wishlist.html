@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | Your Wishlist{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1200px; margin: 0 auto;">
+    <h2 style="margin-bottom: 30px;"><i class="fas fa-heart" style="color: var(--accent-gold); margin-right: 10px;"></i>Your Wishlist</h2>
+
+    {% if w_items %}
+    <div class="product-grid">
+        {% for item in w_items %}
+        <div class="product-card">
+            <a href="/product_view/{{item.product.id}}/" style="text-decoration:none;">
+                {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" class="product-image" alt="{{ item.product.name }}">
+                {% else %}
+                    <div class="product-image" style="display:flex; align-items:center; justify-content:center; background:#ccc; color:#333;">No Image</div>
+                {% endif %}
+            </a>
+            <div class="product-info">
+                <a href="/product_view/{{item.product.id}}/" style="text-decoration:none;">
+                    <h3 class="product-title">{{item.product.name}}</h3>
+                </a>
+                <div class="product-price">
+                    ₹{{item.product.final_price}}
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: auto;">
+                    <button data-product="{{item.product.id}}" data-action="add" class="btn-primary update-cart" style="flex: 2; padding: 10px;">Add To Cart</button>
+                    <!-- Ideally we should have a remove from wishlist endpoint, but keeping it simple -->
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="product-card" style="padding: 50px; text-align: center;">
+        <i class="far fa-heart" style="font-size: 4rem; color: var(--text-secondary); margin-bottom: 20px;"></i>
+        <h3>Your Wishlist is Empty</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 30px;">Save items you love here to easily find them later.</p>
+        <a href="/" class="btn-primary" style="width: auto; padding: 10px 30px; text-decoration: none;">Explore Products</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

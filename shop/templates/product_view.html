@@ -1,64 +1,155 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} {{product.name}} {% endblock %}
+{% block title %}Shopvexael | {{product.name}}{% endblock %}
 
-{% block css %}
-{% endblock %}
 {% block body %}
-{% load humanize %}
-<div class="container mt-4">
-    <div class="row">
-    <div class="col-md-4">
-    <div class="row">
-<img src="/media/{{product.image}}" alt="" style="width: 300px; height: 400px;">
-    </div>
-    <br>
-    <div class="row">
-        <button data-product="{{product.id}}" data-action="add" class="btn add-btn update-cart"
-        style="background-color: #8c5d4f; color: white; width: 15rem;">Add To Cart</button>    </div>
-</div>
-<div class="col-md-8">
-    <h3>{{product.name}}</h3>
-    <p style="font-size: 25px;"><b>₹ {{product.price}}</b></p>
-    <br>
-    <h5>Key Features:</h5>
-    <ul>
-        {% for i in feature %}
-        <li>{{i.feature}}</li>
-        {% endfor %}
-    </ul>
-    <br>
-      <h2>Add Reviews Here</h2>
-      <form method="POST" action="/product_view/{{product.id}}/"> {% csrf_token %}
-            <div class="form-floating">
-                  <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"
-                        style="height: 100px" id="content" name="content"></textarea>
-                  <label for="floatingTextarea2">Leave a feedback about the {{product.name}} here.</label>
-                  <br>
-                  <button type="submit" class="btn btn-primary">Add Review</button>
+<div style="padding: 40px 20px; max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+        
+        <!-- Product Image -->
+        <div style="flex: 1; min-width: 300px;">
+            <div class="product-card" style="padding: 20px; background: white;">
+                {% if product.image %}
+                    <img src="{{product.image.url}}" style="width: 100%; object-fit: contain; max-height: 500px;" alt="{{product.name}}">
+                {% else %}
+                    <div style="width: 100%; height: 400px; display:flex; align-items:center; justify-content:center; background:#ccc; color:#333;">No Image</div>
+                {% endif %}
             </div>
-      </form>
-</div>
-</div>
-<div class="container mt-2">
-          <h2>All Reviews ({{reviews.count}})</h2>
-          
-          {% for review in reviews %}
-          <div class="card">
-                <div class="card-header">
-                      <span style="font-size: 22px;">{{review.customer}} </span> <span
-                            style="font-size: 12px;">{{review.datetime | naturaltime}}</span>
+        </div>
+
+        <!-- Product Details -->
+        <div style="flex: 1.5; min-width: 300px;">
+            {% if product.brand %}
+            <div style="color: var(--accent-gold); font-weight: bold; margin-bottom: 10px;">{{product.brand.name}}</div>
+            {% endif %}
+            
+            <h1 style="margin-top: 0; font-size: 2.5rem; margin-bottom: 15px;">{{product.name}}</h1>
+            
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <div style="color: var(--accent-gold);">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <span style="color: var(--text-secondary); margin-left: 5px;">(4.5 based on {{reviews.count}} reviews)</span>
                 </div>
-                <div class="card-body">
-                      <h6 class="card-text">{{review.content}}</h6>
-                </div>
-          </div>
-          <br>
-          {% endfor %}
+                {% if product.category %}
+                <span style="background: var(--bg-card); padding: 5px 10px; border-radius: 4px; font-size: 0.8rem;">{{product.category.name}}</span>
+                {% endif %}
+            </div>
+
+            <hr style="border-color: var(--border-color); margin-bottom: 20px;">
+
+            <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 10px; color: var(--accent-gold);">
+                ₹{{product.final_price}}
+                {% if product.discount_price %}
+                <span style="font-size: 1.2rem; text-decoration: line-through; color: var(--text-secondary); margin-left: 10px;">₹{{product.price}}</span>
+                <span style="font-size: 1rem; color: #10b981; margin-left: 10px;">Save Big!</span>
+                {% endif %}
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                {% if product.stock > 0 %}
+                    <span style="color: #10b981; font-weight: bold;"><i class="fas fa-check-circle" style="margin-right: 5px;"></i>In Stock</span>
+                {% else %}
+                    <span style="color: var(--accent-red); font-weight: bold;"><i class="fas fa-times-circle" style="margin-right: 5px;"></i>Out of Stock</span>
+                {% endif %}
+            </div>
+
+            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 30px;">
+                {{product.description|default:"No description available for this product."}}
+            </p>
+
+            <!-- Features -->
+            {% if feature %}
+            <h3 style="margin-bottom: 15px;">Key Features</h3>
+            <ul style="list-style-type: none; padding-left: 0; margin-bottom: 30px;">
+                {% for f in feature %}
+                <li style="margin-bottom: 10px; display: flex; align-items: flex-start;">
+                    <i class="fas fa-check" style="color: var(--accent-gold); margin-top: 4px; margin-right: 10px;"></i>
+                    <span>{{f.feature}}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div style="display: flex; gap: 15px;">
+                {% if request.user.is_authenticated %}
+                <button data-product="{{product.id}}" data-action="add" class="btn-primary update-cart" style="flex: 1; padding: 15px; font-size: 1.1rem;"><i class="fas fa-shopping-cart" style="margin-right: 10px;"></i>Add to Cart</button>
+                <form action="/add_wishlist/{{product.id}}/" method="POST" style="flex: 1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-primary" style="background: transparent; border: 1px solid var(--accent-gold); color: var(--accent-gold); width: 100%; padding: 15px; font-size: 1.1rem;"><i class="far fa-heart" style="margin-right: 10px;"></i>Add to Wishlist</button>
+                </form>
+                {% else %}
+                <a href="/login/" class="btn-primary" style="flex: 1; text-align: center; padding: 15px; font-size: 1.1rem; text-decoration: none;">Login to Buy</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
-</div>
+
+    <!-- Reviews Section -->
+    <div style="margin-top: 60px;">
+        <h2 style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 30px;">Customer Reviews</h2>
+        
+        <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+            <!-- Write a Review -->
+            <div style="flex: 1; min-width: 300px;">
+                <div class="product-card" style="padding: 25px;">
+                    <h3>Write a Review</h3>
+                    {% if request.user.is_authenticated %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label>Rating (1-5)</label>
+                            <select name="rating" class="form-control" required>
+                                <option value="5">5 Stars - Excellent</option>
+                                <option value="4">4 Stars - Good</option>
+                                <option value="3">3 Stars - Average</option>
+                                <option value="2">2 Stars - Poor</option>
+                                <option value="1">1 Star - Terrible</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Your Review</label>
+                            <textarea name="content" class="form-control" rows="4" required placeholder="What did you like or dislike?"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Submit Review</button>
+                    </form>
+                    {% else %}
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">You must be logged in to leave a review.</p>
+                    <a href="/login/" class="btn-primary" style="text-align: center; text-decoration: none; display: block;">Login Now</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Review List -->
+            <div style="flex: 2; min-width: 300px;">
+                {% if reviews %}
+                    {% for review in reviews %}
+                    <div style="background: var(--bg-card); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <strong style="color: var(--accent-gold);">{{review.customer.name}}</strong>
+                            <span style="color: var(--text-secondary); font-size: 0.9rem;">{{review.datetime|date:"M d, Y"}}</span>
+                        </div>
+                        <div style="color: var(--accent-gold); margin-bottom: 10px;">
+                            <!-- Simple star display logic (can be improved with custom template tags) -->
+                            Rating: {{review.rating}}/5 <i class="fas fa-star"></i>
+                        </div>
+                        <p style="margin: 0; line-height: 1.5; color: var(--text-primary);">
+                            {{review.content}}
+                        </p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 40px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-color);">
+                        <i class="far fa-comment-dots" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 15px;"></i>
+                        <h4>No reviews yet</h4>
+                        <p style="color: var(--text-secondary);">Be the first to review this product!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
-
-
-

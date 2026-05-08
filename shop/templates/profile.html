@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | User Dashboard{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1200px; margin: 0 auto;">
+    
+    <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+        <!-- User Profile Sidebar -->
+        <div style="flex: 1; min-width: 300px;">
+            <div class="product-card" style="padding: 30px; text-align: center;">
+                <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 20px auto; color: var(--text-secondary);">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h2>{{customer.name}}</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 5px;">{{customer.email}}</p>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">{{customer.phone_number}}</p>
+                
+                <hr style="border-color: var(--border-color); margin-bottom: 20px;">
+                
+                <a href="/change_password/" style="display: block; color: var(--accent-gold); text-decoration: none; margin-bottom: 10px;">Change Password</a>
+                <a href="/logout/" style="display: block; color: var(--accent-red); text-decoration: none;">Logout</a>
+            </div>
+        </div>
+
+        <!-- Order History -->
+        <div style="flex: 2.5; min-width: 300px;">
+            <h2 style="margin-bottom: 20px;"><i class="fas fa-box" style="color: var(--accent-gold); margin-right: 10px;"></i>Order History</h2>
+            
+            {% if orders %}
+                {% for order in orders %}
+                <div class="product-card" style="padding: 20px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-weight: bold; margin-bottom: 5px;">Order #{{order.id}}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Placed on {{order.date_ordered|date:"M d, Y"}}</div>
+                        </div>
+                        <div>
+                            {% if order.status == 'Delivered' %}
+                            <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 5px 10px; border-radius: 4px; font-weight: bold;">{{order.status}}</span>
+                            {% elif order.status == 'Processing' or order.status == 'Shipped' %}
+                            <span style="background: rgba(250, 204, 21, 0.1); color: var(--accent-gold); padding: 5px 10px; border-radius: 4px; font-weight: bold;">{{order.status}}</span>
+                            {% else %}
+                            <span style="background: rgba(255, 255, 255, 0.1); color: var(--text-primary); padding: 5px 10px; border-radius: 4px; font-weight: bold;">{{order.status}}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="color: var(--text-secondary);">
+                            {{order.orderitem_set.count}} Item(s)
+                        </div>
+                        <div style="font-weight: bold; font-size: 1.2rem;">
+                            Total: <span style="color: var(--accent-gold);">₹{{order.get_cart_total}}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="product-card" style="padding: 50px; text-align: center;">
+                    <i class="fas fa-box-open" style="font-size: 4rem; color: var(--text-secondary); margin-bottom: 20px;"></i>
+                    <h3>No Orders Yet</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 30px;">You haven't placed any orders yet.</p>
+                    <a href="/" class="btn-primary" style="width: auto; padding: 10px 30px; text-decoration: none;">Start Shopping</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
