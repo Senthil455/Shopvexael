@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %} Searched Result {% endblock %}
+{% block css %}
+{% endblock %}
+{% block body %}
+{% if search %}
+
+<div class="container mt-2 mb-3">
+
+    <div class="row">
+        {% for product in products %}
+        <div class="col-lg-4 my-4">
+            <div class="card shadow align-items-center" style="width: 20rem; height: 23rem;">
+                <img src="/media/{{product.image}}" class="card-img-top" alt="..." style="width: 170px; height: 260px;">
+                <div class="card-body">
+                  <h5 class="card-title">{{product.name}}</h5>
+                  <hr>
+                  {% if request.user.is_authenticated %}
+                  <button data-product="{{product.id}}" data-action="add" class="btn add-btn update-cart" style="background-color: #8c5d4f; color: white;">Add To Cart</button>
+                  <a href="/product_view/{{product.id}}/" class="btn btn-outline-success">View</a>
+                  {% else %}
+                  <button class="btn" style="background-color: #8c5d4f; color: white;">Login to add the item</button>
+                  {% endif %}
+                  <h4 style="display: inline-block; float: right;">₹{{product.price}}</h4>
+                </div>
+              </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<h1>You forgot to search</h1>
+{% endif %}
+{% endblock %}

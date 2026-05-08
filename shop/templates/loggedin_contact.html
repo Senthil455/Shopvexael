@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Contact Us {% endblock %}
+{% block css %}
+{% endblock %}
+{% block body %}
+<div class="container py-2 mt-3">
+    <h2>Contact Us</h2>
+    <form method="post">{% csrf_token %}
+
+        <div class="form-group">
+            <div class="form-group mt-2">
+                <label>How May We Help You ?</label>
+                <textarea class="form-control mt-2" id="desc" name="desc" rows="3"></textarea>
+            </div>
+            <button type="submit" style="background-color: #8c5d4f; color: white; width: 8rem;"
+                class="btn mt-4">Submit</button>
+    </form>
+    {% endblock %}
+    {% block js %}
+    <script>
+        {% if alert %}
+        alert("We will contact you soon!!!");
+        document.location = "/"
+        {% endif %}
+    </script>
+    {% endblock %}

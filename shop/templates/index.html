@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Online Shopping {% endblock %}
+{% block css %}
+{% endblock %}
+{% block body %}
+
+<div class="container mt-2 mb-3">
+
+  <div class="row">
+    {% for product in products %}
+    <div class="col-lg-4 my-4">
+      <div class="card shadow align-items-center" style="width: 20rem; height: 25rem;">
+        <img src="/media/{{product.image}}" class="card-img-top" style="width: 170px; height: 260px;" alt="...">
+        <div class="card-body">
+          <h5 class="card-title">{{product.name}}</h5>
+          <hr>
+          {% if request.user.is_authenticated %}
+          <button data-product="{{product.id}}" data-action="add" class="btn add-btn update-cart"
+            style="background-color: #8c5d4f; color: white;">Add To Cart</button>
+          <a href="/product_view/{{product.id}}/" class="btn btn-outline-secondary">View</a>
+          {% else %}
+          <button class="btn" style="background-color: #8c5d4f; color: white;">Login to add the item</button>
+          {% endif %}
+          <h4 style="display: inline-block; float: right;">&nbsp;₹{{product.price}}</h4>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+{% if alert %}
+  alert("Logout Sucessfull.")
+  window.location.href = '/'
+{% endif %}
+</script>
+{% endblock %}

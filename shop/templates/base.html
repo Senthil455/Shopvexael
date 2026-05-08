@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>{% block title %} {% endblock %}</title>
+    <style>
+        .navbar {
+            background-color: #8c5d4f;
+        }
+
+        body {
+            background-color: hsl(0, 0%, 98%);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: hsl(0, 0%, 30%);
+        }
+
+        .box-element {
+            box-shadow: hsl(0, 0%, 80%) 0 0 16px;
+            background-color: #fff;
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .thumbnail {
+            width: 100%;
+            height: 200px;
+            -webkit-box-shadow: -1px -3px 5px -2px rgba(214, 214, 214, 1);
+            -moz-box-shadow: -1px -3px 5px -2px rgba(214, 214, 214, 1);
+            box-shadow: -1px -3px 5px -2px rgba(214, 214, 214, 1);
+        }
+
+        .product {
+            border-radius: 0 0 4px 4px;
+        }
+
+        #cart-icon {
+            width: 25px;
+            display: inline-block;
+            margin-left: 15px;
+        }
+
+        .col-lg-4,
+        .col-lg-6,
+        .col-lg-8,
+        .col-lg-12 {
+            margin-top: 10px;
+        }
+
+        .btn {
+            border-radius: 0;
+        }
+
+        .row-image {
+            width: 100px;
+        }
+
+        .form-field {
+            width: 250px;
+            display: inline-block;
+            padding: 5px;
+        }
+
+        .cart-row {
+            display: flex;
+            align-items: flex-stretch;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ececec;
+
+        }
+
+        .quantity {
+            display: inline-block;
+            font-weight: 700;
+            padding-right: 10px;
+
+
+        }
+
+        .chg-quantity {
+            width: 12px;
+            cursor: pointer;
+            display: block;
+            margin-top: 5px;
+            transition: .1s;
+        }
+
+        .chg-quantity:hover {
+            opacity: .6;
+        }
+
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+    {% block css %}
+
+    {% endblock %}
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">DataFlair Online Shopping</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="container w-75">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/">Home</a>
+                    </li>
+                    {% if request.user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/cart/"><span class=" fa fa-shopping-cart"
+                                style="font-size: 19px;"> ({{cartItems}})</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/tracker/">Track Order</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/change_password/">Change Password</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/loggedin_contact/">Contact Us</a>
+                    </li>
+                    {% endif %}
+                    {% if not request.user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/register/">Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/login/">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/contact/">Contact Us</a>
+                    </li>
+                    {% else %}
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#" style="font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-size: 1rem;">Welcome {{request.user}}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/logout/">Logout</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                </div>
+                <form class="d-flex" method="POST" action="/search/"> {% csrf_token %}
+                    <input class="form-control me-2" type="search" name="search" placeholder="Search Product" aria-label="Search">
+                    <button href="/search/" class="btn btn-secondary" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    {% block body %}
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+
+    <script>
+        var user = '{{request.user}}'
+
+        function getToken(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        var csrftoken = getToken('csrftoken');
+
+        function getCookie(name) {
+            // Split cookie string and get all individual name=value pairs in an array
+            var cookieArr = document.cookie.split(";");
+
+            // Loop through the array elements
+            for (var i = 0; i < cookieArr.length; i++) {
+                var cookiePair = cookieArr[i].split("=");
+
+                /* Removing whitespace at the beginning of the cookie name
+                and compare it with the given string */
+                if (name == cookiePair[0].trim()) {
+                    // Decode the cookie value and return
+                    return decodeURIComponent(cookiePair[1]);
+                }
+            }
+
+            // Return null if not found
+            return null;
+        }
+        var cart = JSON.parse(getCookie('cart'))
+
+        if (cart == undefined) {
+            cart = {}
+            console.log('Cart Created!', cart)
+            document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"
+        }
+        console.log('Cart:', cart)
+
+        var updateBtns = document.getElementsByClassName('update-cart')
+
+        for (var i = 0; i < updateBtns.length; i++) {
+            updateBtns[i].addEventListener('click', function () {
+                var productID = this.dataset.product
+                var action = this.dataset.action
+                console.log('productId:', productID, 'action:', action)
+                console.log('USER:', user)
+                if (user == 'AnonymousUser') {
+                    addCookieItem(productID, action)
+                } else {
+                    updateUserOrder(productID, action)
+                }
+            })
+        }
+
+        function addCookieItem(productID, action) {
+            console.log('Not logged in')
+            if (action == 'add') {
+                if (cart[productID] == undefined) {
+                    cart[productID] = { 'quantity': 1 }
+
+                } else {
+                    cart[productID]['quantity'] += 1
+                }
+            }
+
+            if (action == 'remove') {
+                cart[productID]['quantity'] -= 1
+
+                if (cart[productID]['quantity'] <= 0) {
+                    console.log('Item should be deleted')
+                    delete cart[productID];
+                }
+            }
+            console.log('Cart:', cart)
+            document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
+            location.reload()
+        }
+
+        function updateUserOrder(productID, action) {
+            console.log('User is logged in, sending data...')
+            var url = '/update_item/'
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify({ 'productID': productID, 'action': action })
+            })
+                .then((response) => {
+                    return response.json()
+                })
+
+                .then((data) => {
+                    console.log('data:', data)
+                    location.reload()
+                })
+        }
+
+    </script>
+    {% block js %}
+    {% endblock %}
+</body>
+
+</html>
