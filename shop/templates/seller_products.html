@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | My Products{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+        
+        <!-- Sidebar Navigation (Same as Dashboard) -->
+        <div style="flex: 0 0 280px;">
+            <div class="product-card" style="padding: 20px; position: sticky; top: 100px;">
+                <div style="text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                    <div style="width: 80px; height: 80px; background: var(--bg-dark); color: var(--accent-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 2rem; border: 2px solid var(--accent-gold);">
+                        {{ seller.company_name|slice:":1"|upper }}
+                    </div>
+                    <h3 style="margin: 0;">{{ seller.company_name }}</h3>
+                </div>
+
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="margin-bottom: 10px;">
+                        <a href="/seller_dashboard/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--text-primary); text-decoration: none; border-radius: 8px;">
+                            <i class="fas fa-chart-line"></i> Dashboard
+                        </a>
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <a href="/seller_products/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); text-decoration: none; border-radius: 8px; font-weight: bold;">
+                            <i class="fas fa-box"></i> My Products
+                        </a>
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <a href="/seller_orders/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--text-primary); text-decoration: none; border-radius: 8px;">
+                            <i class="fas fa-shopping-bag"></i> Orders
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div style="flex: 1; min-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1 style="margin: 0;">My Products ({{ products.count }})</h1>
+                <a href="/seller_add_product/" class="btn-primary" style="width: auto; padding: 12px 25px;"><i class="fas fa-plus"></i> Add New Product</a>
+            </div>
+
+            <!-- Products List Table -->
+            <div class="product-card" style="padding: 25px;">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 0.9rem;">
+                                <th style="padding: 15px 10px;">Image</th>
+                                <th style="padding: 15px 10px;">Product Name</th>
+                                <th style="padding: 15px 10px;">Category</th>
+                                <th style="padding: 15px 10px;">Price</th>
+                                <th style="padding: 15px 10px;">Stock</th>
+                                <th style="padding: 15px 10px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if products %}
+                                {% for product in products %}
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 15px 10px;">
+                                        {% if product.image %}
+                                            <img src="{{ product.image.url }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                                        {% else %}
+                                            <img src="https://picsum.photos/seed/{{product.id}}/100/100" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                                        {% endif %}
+                                    </td>
+                                    <td style="padding: 15px 10px;">
+                                        <div style="font-weight: bold;">{{ product.name }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">SKU: {{ product.sku }}</div>
+                                    </td>
+                                    <td style="padding: 15px 10px; font-size: 0.9rem;">{{ product.category.name }}</td>
+                                    <td style="padding: 15px 10px; font-weight: bold; color: var(--accent-gold);">₹{{ product.final_price }}</td>
+                                    <td style="padding: 15px 10px;">
+                                        {% if product.stock > 10 %}
+                                            <span style="color: #10b981;">{{ product.stock }} In Stock</span>
+                                        {% elif product.stock > 0 %}
+                                            <span style="color: var(--accent-gold);">{{ product.stock }} Low Stock</span>
+                                        {% else %}
+                                            <span style="color: #ef4444;">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="padding: 15px 10px;">
+                                        <div style="display: flex; gap: 10px;">
+                                            <a href="/seller_edit_product/{{ product.id }}/" style="color: var(--text-secondary); text-decoration: none;"><i class="fas fa-edit"></i></a>
+                                            <a href="/seller_delete_product/{{ product.id }}/" style="color: #ef4444; text-decoration: none;" onclick="return confirm('Are you sure you want to delete this product?')"><i class="fas fa-trash"></i></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                                        No products found. Start selling today!
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

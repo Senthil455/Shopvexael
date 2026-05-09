@@ -49,6 +49,13 @@
         <a href="/?sort=popular">Trending</a>
         <a href="/?discount=true">Deals</a>
         <a href="/contact/">Customer Service</a>
+        
+        <div style="margin-left: auto; display: flex; gap: 20px;">
+            <a href="/seller_signup/" style="color: var(--accent-gold); font-weight: bold;"><i class="fas fa-store"></i> Seller Hub</a>
+            {% if request.user.is_staff %}
+            <a href="/admin_dashboard/" style="color: #3b82f6; font-weight: bold;"><i class="fas fa-shield-alt"></i> Admin Panel</a>
+            {% endif %}
+        </div>
     </div>
 
     <!-- Main Content Area -->

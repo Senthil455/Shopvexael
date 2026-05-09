@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | Become a Seller{% endblock %}
+
+{% block body %}
+<div style="padding: 60px 20px; max-width: 600px; margin: 0 auto;">
+    <div class="product-card" style="padding: 40px; background: white;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <i class="fas fa-store" style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 15px;"></i>
+            <h1 style="margin: 0; font-size: 2rem;">Sell on Shopvexael</h1>
+            <p style="color: var(--text-secondary);">Join thousands of partners and grow your business today.</p>
+        </div>
+
+        {% if alert %}
+        <div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; border: 1px solid #ef4444;">
+            {{ error_message|default:"Something went wrong. Please check your details." }}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Company/Store Name</label>
+                <input type="text" name="company_name" class="form-control" placeholder="e.g. Acme Electronics" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Store Description</label>
+                <textarea name="description" class="form-control" rows="4" placeholder="Tell customers about your store..." required></textarea>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" required style="margin-top: 5px;">
+                    <span style="font-size: 0.9rem; color: var(--text-secondary);">
+                        I agree to the <a href="/terms/" style="color: var(--accent-gold);">Shopvexael Seller Terms & Conditions</a> and understand that my store will be verified before going live.
+                    </span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">Submit Application</button>
+        </form>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <p style="color: var(--text-secondary);">Already a seller? <a href="/seller_dashboard/" style="color: var(--accent-gold); font-weight: bold;">Go to Dashboard</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

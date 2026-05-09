@@ -21,6 +21,15 @@ urlpatterns = [
     path("add_wishlist/<int:myid>/", views.add_wishlist, name="add_wishlist"),
     path("profile/", views.profile, name="profile"),
     
+    # Seller Panel Routes
+    path("seller_signup/", views.seller_signup, name="seller_signup"),
+    path("seller_dashboard/", views.seller_dashboard, name="seller_dashboard"),
+    path("seller_products/", views.seller_products, name="seller_products"),
+    path("seller_add_product/", views.seller_add_product, name="seller_add_product"),
+    
+    # Admin Panel Routes
+    path("admin_dashboard/", views.admin_dashboard, name="admin_dashboard"),
+    
     # Placeholders for Shopvexael V2 Expansion
     path("settings/", lambda r: views.generic_placeholder(r, 'Settings'), name="settings"),
     path("notifications/", lambda r: views.generic_placeholder(r, 'Notifications'), name="notifications"),

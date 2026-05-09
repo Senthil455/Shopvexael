@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | Admin Command Center{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+        <h1 style="margin: 0;"><i class="fas fa-shield-alt" style="color: var(--accent-gold);"></i> Admin Command Center</h1>
+        <div style="display: flex; gap: 15px;">
+            <a href="/admin/" class="btn-primary" style="width: auto; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);"><i class="fas fa-cog"></i> Django Admin</a>
+            <button class="btn-primary" style="width: auto;"><i class="fas fa-download"></i> Export Reports</button>
+        </div>
+    </div>
+
+    <!-- Platform Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 50px;">
+        <div class="product-card" style="padding: 30px; border-left: 5px solid var(--accent-gold);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Total Platform Revenue</div>
+                    <div style="font-size: 2.2rem; font-weight: bold;">₹{{ total_revenue|default:"0" }}</div>
+                </div>
+                <i class="fas fa-wallet" style="font-size: 2rem; color: rgba(184, 134, 11, 0.2);"></i>
+            </div>
+            <div style="margin-top: 15px; font-size: 0.85rem; color: #10b981;">
+                <i class="fas fa-arrow-up"></i> 12% increase from last month
+            </div>
+        </div>
+        <div class="product-card" style="padding: 30px; border-left: 5px solid #10b981;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Active Sellers</div>
+                    <div style="font-size: 2.2rem; font-weight: bold;">{{ seller_count }}</div>
+                </div>
+                <i class="fas fa-users-cog" style="font-size: 2rem; color: rgba(16, 185, 129, 0.2);"></i>
+            </div>
+            <div style="margin-top: 15px; font-size: 0.85rem; color: var(--accent-gold);">
+                {{ pending_approvals }} awaiting verification
+            </div>
+        </div>
+        <div class="product-card" style="padding: 30px; border-left: 5px solid #3b82f6;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Total Customers</div>
+                    <div style="font-size: 2.2rem; font-weight: bold;">{{ customer_count }}</div>
+                </div>
+                <i class="fas fa-user-friends" style="font-size: 2rem; color: rgba(59, 130, 246, 0.2);"></i>
+            </div>
+            <div style="margin-top: 15px; font-size: 0.85rem; color: #10b981;">
+                {{ new_today }} joined today
+            </div>
+        </div>
+        <div class="product-card" style="padding: 30px; border-left: 5px solid #ef4444;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Pending Orders</div>
+                    <div style="font-size: 2.2rem; font-weight: bold;">{{ pending_orders }}</div>
+                </div>
+                <i class="fas fa-clock" style="font-size: 2rem; color: rgba(239, 68, 68, 0.2);"></i>
+            </div>
+            <div style="margin-top: 15px; font-size: 0.85rem; color: #ef4444;">
+                <i class="fas fa-exclamation-triangle"></i> 3 orders delayed
+            </div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 30px; margin-bottom: 50px; flex-wrap: wrap;">
+        <!-- Verification Queue -->
+        <div class="product-card" style="flex: 1; min-width: 450px; padding: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h3 style="margin: 0;">Seller Verification Queue</h3>
+                <span style="background: var(--accent-gold); color: black; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">{{ pending_approvals }} NEW</span>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                {% if unverified_sellers %}
+                    {% for seller in unverified_sellers %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div style="width: 45px; height: 45px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-gold); font-weight: bold;">
+                                {{ seller.company_name|slice:":1" }}
+                            </div>
+                            <div>
+                                <div style="font-weight: bold;">{{ seller.company_name }}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Applied {{ seller.user.date_joined|timesince }} ago</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-primary" style="width: auto; padding: 8px 15px; background: #10b981; border: none; font-size: 0.85rem;">Approve</button>
+                            <button class="btn-primary" style="width: auto; padding: 8px 15px; background: #ef4444; border: none; font-size: 0.85rem;">Reject</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 30px; color: var(--text-secondary);">
+                        <i class="fas fa-check-double" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                        No pending seller verifications.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Platform Activity -->
+        <div class="product-card" style="flex: 1.5; min-width: 600px; padding: 25px;">
+            <h3 style="margin-top: 0; margin-bottom: 25px;">Recent Platform Orders</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 0.9rem;">
+                            <th style="padding: 15px 10px;">Order ID</th>
+                            <th style="padding: 15px 10px;">Customer</th>
+                            <th style="padding: 15px 10px;">Seller</th>
+                            <th style="padding: 15px 10px;">Amount</th>
+                            <th style="padding: 15px 10px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if all_orders %}
+                            {% for order in all_orders %}
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 15px 10px; font-weight: bold;">#{{ order.id }}</td>
+                                <td style="padding: 15px 10px;">{{ order.customer.name }}</td>
+                                <td style="padding: 15px 10px; font-size: 0.85rem;">
+                                    {% with first_item=order.orderitem_set.first %}
+                                        {{ first_item.product.seller.company_name|default:"Shopvexael" }}
+                                    {% endwith %}
+                                </td>
+                                <td style="padding: 15px 10px; color: var(--accent-gold); font-weight: bold;">₹{{ order.get_cart_total }}</td>
+                                <td style="padding: 15px 10px;">
+                                    <span style="padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">Processing</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
