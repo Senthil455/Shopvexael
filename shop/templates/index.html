@@ -102,3 +102,80 @@
     {% endif %}
 </div>
 {% endblock %}
+
+{% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebarLinks = document.querySelectorAll('.sidebar-list a');
+        const productGridContainer = document.querySelector('.product-grid').parentElement;
+        
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.href;
+                
+                // Show a loading skeleton or opacity change
+                productGridContainer.style.opacity = '0.5';
+                
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const newGrid = doc.querySelector('.product-grid');
+                    const newHeader = doc.querySelector('.hero-banner + div h2');
+                    
+                    if (newGrid && newHeader) {
+                        document.querySelector('.product-grid').innerHTML = newGrid.innerHTML;
+                        document.querySelector('.hero-banner + div h2').innerHTML = newHeader.innerHTML;
+                        
+                        // Update history state so URL matches
+                        window.history.pushState({}, '', url);
+                    }
+                    productGridContainer.style.opacity = '1';
+                    
+                    // Re-attach Add to Cart event listeners
+                    attachCartEvents();
+                })
+                .catch(err => {
+                    productGridContainer.style.opacity = '1';
+                    console.error('Filtering failed', err);
+                });
+            });
+        });
+
+        // We need to re-attach the cart buttons after AJAX load
+        function attachCartEvents() {
+            var updateBtns = document.querySelectorAll('.update-cart');
+            for (var i = 0; i < updateBtns.length; i++) {
+                // Remove existing listeners by cloning
+                let oldBtn = updateBtns[i];
+                let newBtn = oldBtn.cloneNode(true);
+                oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+                
+                newBtn.addEventListener('click', function (e) {
+                    var productID = this.dataset.product;
+                    var action = this.dataset.action;
+                    var btn = this;
+                    
+                    if(btn.tagName === 'BUTTON' && action === 'add') {
+                        btn.innerHTML = 'Adding...';
+                        btn.disabled = true;
+                    }
+
+                    if (user == 'AnonymousUser') {
+                        addCookieItem(productID, action, btn);
+                    } else {
+                        updateUserOrder(productID, action, btn);
+                    }
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

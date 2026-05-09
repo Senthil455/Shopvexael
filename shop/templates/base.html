@@ -99,26 +99,65 @@
             document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"
         }
 
-        // Vanilla JS for Add to cart
+        // Toast Notification System
+        function showToast(message, type='success') {
+            const toast = document.createElement('div');
+            toast.style.position = 'fixed';
+            toast.style.bottom = '20px';
+            toast.style.right = '20px';
+            toast.style.padding = '15px 25px';
+            toast.style.borderRadius = '5px';
+            toast.style.color = 'white';
+            toast.style.fontWeight = 'bold';
+            toast.style.zIndex = '9999';
+            toast.style.transition = 'opacity 0.5s ease-in-out';
+            toast.innerHTML = message;
+            
+            if(type === 'success') toast.style.backgroundColor = '#10b981';
+            else if(type === 'error') toast.style.backgroundColor = '#ef4444';
+            else toast.style.backgroundColor = 'var(--accent-gold)';
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        // Add to cart AJAX
         var updateBtns = document.querySelectorAll('.update-cart');
         for (var i = 0; i < updateBtns.length; i++) {
-            updateBtns[i].addEventListener('click', function () {
+            updateBtns[i].addEventListener('click', function (e) {
                 var productID = this.dataset.product;
                 var action = this.dataset.action;
+                var btn = this;
+                
+                // If it's a dedicated add button in grid or product page
+                if(btn.tagName === 'BUTTON' && action === 'add') {
+                    btn.innerHTML = 'Adding...';
+                    btn.disabled = true;
+                }
+
                 if (user == 'AnonymousUser') {
-                    addCookieItem(productID, action);
+                    addCookieItem(productID, action, btn);
                 } else {
-                    updateUserOrder(productID, action);
+                    updateUserOrder(productID, action, btn);
                 }
             })
         }
 
-        function addCookieItem(productID, action) {
+        function addCookieItem(productID, action, btn) {
             if (action == 'add') {
                 if (cart[productID] == undefined) {
                     cart[productID] = { 'quantity': 1 }
                 } else {
                     cart[productID]['quantity'] += 1
+                }
+                showToast('Added to Cart ✓');
+                if(btn && btn.tagName === 'BUTTON') {
+                    btn.innerHTML = 'Added ✓';
+                    setTimeout(() => { btn.innerHTML = 'Add To Cart'; btn.disabled = false; }, 2000);
                 }
             }
             if (action == 'remove') {
@@ -128,10 +167,17 @@
                 }
             }
             document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
-            location.reload()
+            
+            // Only reload if we're on the cart page
+            if(window.location.pathname === '/cart/') location.reload();
+            else {
+                // Manually update cart counter
+                let total = Object.values(cart).reduce((a, b) => a + b.quantity, 0);
+                document.getElementById('cart-total').innerText = total;
+            }
         }
 
-        function updateUserOrder(productID, action) {
+        function updateUserOrder(productID, action, btn) {
             var url = '/update_item/'
             fetch(url, {
                 method: 'POST',
@@ -141,12 +187,62 @@
                 },
                 body: JSON.stringify({ 'productID': productID, 'action': action })
             })
-            .then((response) => {
-                return response.json()
-            })
+            .then((response) => response.json())
             .then((data) => {
-                location.reload()
+                if(action === 'add') {
+                    showToast('Added to Cart ✓');
+                    if(btn && btn.tagName === 'BUTTON') {
+                        btn.innerHTML = 'Added ✓';
+                        setTimeout(() => { btn.innerHTML = 'Add To Cart'; btn.disabled = false; }, 2000);
+                    }
+                }
+                if(window.location.pathname === '/cart/' || window.location.pathname === '/checkout/') {
+                    location.reload();
+                } else {
+                    if(data.cartItems !== undefined) {
+                        document.getElementById('cart-total').innerText = data.cartItems;
+                    }
+                }
             })
+        }
+
+        // Wishlist AJAX
+        var wishlistForms = document.querySelectorAll('.wishlist-form');
+        for (var i = 0; i < wishlistForms.length; i++) {
+            wishlistForms[i].addEventListener('submit', function (e) {
+                e.preventDefault();
+                var url = this.action;
+                var btn = this.querySelector('button');
+                var icon = btn.querySelector('i');
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === 'unauthenticated') {
+                        window.location.href = '/login/';
+                    } else if(data.status === 'added') {
+                        showToast('Added to Wishlist ✓', 'success');
+                        if(icon) {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            icon.style.color = 'var(--accent-red)';
+                        }
+                    } else if(data.status === 'removed') {
+                        showToast('Removed from Wishlist', 'info');
+                        if(icon) {
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            icon.style.color = '';
+                        }
+                    }
+                });
+            });
         }
     </script>
     {% block js %}{% endblock %}

@@ -77,7 +77,7 @@
             <div style="display: flex; gap: 15px;">
                 {% if request.user.is_authenticated %}
                 <button data-product="{{product.id}}" data-action="add" class="btn-primary update-cart" style="flex: 1; padding: 15px; font-size: 1.1rem;"><i class="fas fa-shopping-cart" style="margin-right: 10px;"></i>Add to Cart</button>
-                <form action="/add_wishlist/{{product.id}}/" method="POST" style="flex: 1;">
+                <form action="/add_wishlist/{{product.id}}/" method="POST" class="wishlist-form" style="flex: 1;">
                     {% csrf_token %}
                     <button type="submit" class="btn-primary" style="background: transparent; border: 1px solid var(--accent-gold); color: var(--accent-gold); width: 100%; padding: 15px; font-size: 1.1rem;"><i class="far fa-heart" style="margin-right: 10px;"></i>Add to Wishlist</button>
                 </form>

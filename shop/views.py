@@ -147,7 +147,7 @@ def updateItem(request):
 
     if orderItem.quantity <= 0:
         orderItem.delete()
-    return JsonResponse('Item was added', safe=False)
+    return JsonResponse({'message': 'Item was added', 'cartItems': order.get_cart_items}, safe=False)
 
 def product_view(request, myid):
     product = Product.objects.filter(id=myid).first()
@@ -159,10 +159,13 @@ def product_view(request, myid):
     cartItems = data['cartItems']
 
     if request.method=="POST":
-        content = request.POST['content']
-        review = Review(customer=customer, content=content, product=product)
-        review.save()
-        return redirect(f"/product_view/{product.id}")
+        if request.user.is_authenticated:
+            content = request.POST.get('content')
+            rating = request.POST.get('rating', 5)
+            customer = request.user.customer
+            review = Review(customer=customer, content=content, rating=rating, product=product, verified_purchase=True)
+            review.save()
+        return redirect(f"/product_view/{product.id}/")
     return render(request, "product_view.html", {'product':product, 'cartItems':cartItems, 'feature':feature, 'reviews':reviews})
 
 def search(request):
@@ -259,7 +262,10 @@ def register(request):
             customers = Customer.objects.create(user=user, name=full_name, phone_number=phone_number, email=email)
             user.save()
             customers.save()
-            return render(request, "login.html")
+            
+            # Auto login after registration
+            login(request, user)
+            return redirect("/")
     return render(request, "register.html")
 
 def Login(request):
@@ -281,8 +287,7 @@ def Login(request):
 
 def Logout(request):
     logout(request)
-    alert = True
-    return render(request, "index.html", {'alert':alert})
+    return redirect("/")
 def wishlist(request):
     if not request.user.is_authenticated:
         return redirect('/login/')
@@ -294,9 +299,19 @@ def wishlist(request):
 
 def add_wishlist(request, myid):
     if not request.user.is_authenticated:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.method == "POST":
+            return JsonResponse({'status': 'unauthenticated'})
         return redirect('/login/')
     product = Product.objects.get(id=myid)
-    Wishlist.objects.get_or_create(customer=request.user.customer, product=product)
+    obj, created = Wishlist.objects.get_or_create(customer=request.user.customer, product=product)
+    if not created:
+        obj.delete()
+        status = 'removed'
+    else:
+        status = 'added'
+    
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.method == "POST":
+        return JsonResponse({'status': status})
     return redirect(f'/product_view/{myid}/')
 
 def profile(request):
