@@ -13,11 +13,11 @@ def index(request):
     data = cartData(request)
     cartItems = data['cartItems']
     
-    products = Product.objects.all()
+    products = Product.objects.all().select_related('category', 'brand', 'seller')
     categories = Category.objects.all()
     brands = Brand.objects.all()
     
-    # Filtering
+    # Advanced Filtering
     category_id = request.GET.get('category')
     brand_id = request.GET.get('brand')
     price_min = request.GET.get('price_min')
@@ -25,9 +25,10 @@ def index(request):
     query = request.GET.get('q')
     sort = request.GET.get('sort')
     discount = request.GET.get('discount')
+    trending = request.GET.get('trending')
     
     if query:
-        products = products.filter(Q(name__icontains=query) | Q(description__icontains=query))
+        products = products.filter(Q(name__icontains=query) | Q(description__icontains=query) | Q(category__name__icontains=query) | Q(brand__name__icontains=query))
     if category_id:
         products = products.filter(category_id=category_id)
     if brand_id:
@@ -37,7 +38,9 @@ def index(request):
     if price_max:
         products = products.filter(price__lte=price_max)
     if discount:
-        products = products.exclude(discount_price__isnull=True)
+        products = products.filter(discount_price__isnull=False)
+    if trending:
+        products = products.filter(is_trending=True)
         
     # Sorting
     if sort == 'new':
@@ -48,9 +51,12 @@ def index(request):
         products = products.order_by('price')
     elif sort == 'price_desc':
         products = products.order_by('-price')
+    else:
+        # Default sort by featured/bestseller
+        products = products.order_by('-is_featured', '-is_bestseller', '-date_added')
         
     context = {
-        'products': products, 
+        'products': products[:50], # Limit to 50 for performance
         'cartItems': cartItems,
         'categories': categories,
         'brands': brands,
@@ -301,4 +307,10 @@ def profile(request):
     customer = request.user.customer
     orders = Order.objects.filter(customer=customer).order_by('-date_ordered')
     return render(request, 'profile.html', {'orders': orders, 'cartItems': cartItems, 'customer': customer})
+
+
+def generic_placeholder(request, page_title):
+    data = cartData(request)
+    cartItems = data['cartItems']
+    return render(request, 'placeholder.html', {'page_title': page_title, 'cartItems': cartItems})
 

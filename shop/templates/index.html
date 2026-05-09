@@ -54,7 +54,13 @@
     <div class="product-grid">
         {% for product in products %}
         <div class="product-card">
-            <a href="/product_view/{{product.id}}/" style="text-decoration:none;">
+            <a href="/product_view/{{product.id}}/" style="text-decoration:none; position:relative;">
+                {% if product.is_bestseller %}
+                    <span style="position:absolute; top:10px; left:10px; background:var(--accent-gold); color:var(--bg-dark); padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; z-index:10;">Best Seller</span>
+                {% elif product.is_trending %}
+                    <span style="position:absolute; top:10px; left:10px; background:var(--accent-red); color:white; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; z-index:10;">Trending</span>
+                {% endif %}
+                
                 {% if product.image %}
                     <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}">
                 {% else %}
@@ -65,10 +71,20 @@
                 <a href="/product_view/{{product.id}}/" style="text-decoration:none;">
                     <h3 class="product-title">{{product.name}}</h3>
                 </a>
+                
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">
+                    By <span style="color:var(--accent-gold);">{{product.seller.company_name|default:"Shopvexael"}}</span>
+                </div>
+                
+                <div style="color: var(--accent-gold); font-size:0.8rem; margin-bottom:10px;">
+                    <i class="fas fa-star"></i> {{product.average_rating|floatformat:1}} ({{product.review_set.count}})
+                </div>
+
                 <div class="product-price">
                     ₹{{product.final_price}}
                     {% if product.discount_price %}
                     <span class="original">₹{{product.price}}</span>
+                    <span style="font-size:0.75rem; color:#10b981; margin-left:5px;">(-{{product.offer_percentage}}%)</span>
                     {% endif %}
                 </div>
                 
