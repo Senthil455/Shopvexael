@@ -51,7 +51,12 @@
         <a href="/contact/">Customer Service</a>
         
         <div style="margin-left: auto; display: flex; gap: 20px;">
-            <a href="/seller_signup/" style="color: var(--accent-gold); font-weight: bold;"><i class="fas fa-store"></i> Seller Hub</a>
+            {% if '/seller_' in request.path or '/admin_' in request.path %}
+                <a href="/" style="color: var(--accent-gold); font-weight: bold;"><i class="fas fa-shopping-bag"></i> Customer Hub</a>
+            {% else %}
+                <a href="/seller_signup/" style="color: var(--accent-gold); font-weight: bold;"><i class="fas fa-store"></i> Seller Hub</a>
+            {% endif %}
+            
             {% if request.user.is_staff %}
             <a href="/admin_dashboard/" style="color: #3b82f6; font-weight: bold;"><i class="fas fa-shield-alt"></i> Admin Panel</a>
             {% endif %}

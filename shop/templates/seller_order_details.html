@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | Order Details #{{ order.id }}{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1000px; margin: 0 auto;">
+    <div style="margin-bottom: 30px;">
+        <a href="/seller_orders/" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;"><i class="fas fa-arrow-left"></i> Back to Orders</a>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px;">
+            <h1 style="margin: 0;">Order Details #{{ order.id }}</h1>
+            <div style="text-align: right;">
+                <button onclick="window.print()" class="btn-primary" style="width: auto; padding: 10px 20px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);"><i class="fas fa-print"></i> Print Invoice</button>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+        <div>
+            <!-- Items Card -->
+            <div class="product-card" style="padding: 25px; margin-bottom: 30px;">
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Ordered Items</h3>
+                {% for item in items %}
+                <div style="display: flex; gap: 20px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                    <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}https://picsum.photos/seed/{{item.product.id}}/100/100{% endif %}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 5px;">{{ item.product.name }}</h4>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">SKU: {{ item.product.sku }}</div>
+                        <div style="margin-top: 5px; font-weight: bold;">₹{{ item.product.final_price }} x {{ item.quantity }}</div>
+                    </div>
+                    <div style="text-align: right; font-weight: bold; color: var(--accent-gold);">
+                        ₹{{ item.get_total }}
+                    </div>
+                </div>
+                {% endfor %}
+                <div style="text-align: right; font-size: 1.2rem;">
+                    <span style="color: var(--text-secondary);">Seller Subtotal:</span>
+                    <span style="font-weight: bold; color: var(--accent-gold); margin-left: 15px;">₹{{ seller_total }}</span>
+                </div>
+            </div>
+
+            <!-- Tracking Card -->
+            <div class="product-card" style="padding: 25px;">
+                <h3 style="margin-top: 0; margin-bottom: 25px;">Order Tracking Timeline</h3>
+                <div style="position: relative; padding-left: 30px;">
+                    <div style="position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border-color);"></div>
+                    
+                    {% for update in tracking_history %}
+                    <div style="position: relative; margin-bottom: 30px;">
+                        <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: var(--accent-gold); border-radius: 50%; border: 3px solid var(--bg-dark);"></div>
+                        <div style="font-weight: bold;">{{ update.desc }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ update.datetime|date:"M d, Y - H:i" }}</div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div style="position: relative;">
+                        <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: var(--border-color); border-radius: 50%; border: 3px solid var(--bg-dark);"></div>
+                        <div style="font-weight: bold; color: var(--text-secondary);">Order Placed</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ order.date_ordered|date:"M d, Y - H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <!-- Customer Card -->
+            <div class="product-card" style="padding: 25px; margin-bottom: 30px;">
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Customer Info</h3>
+                <div style="margin-bottom: 15px;">
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Name</div>
+                    <div style="font-weight: bold;">{{ order.customer.name }}</div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Email</div>
+                    <div>{{ order.customer.email }}</div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Phone</div>
+                    <div>{{ order.customer.phone_number|default:"N/A" }}</div>
+                </div>
+            </div>
+
+            <!-- Shipping Card -->
+            <div class="product-card" style="padding: 25px;">
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Shipping Address</h3>
+                {% if shipping %}
+                <div style="line-height: 1.6;">
+                    {{ shipping.address }}<br>
+                    {{ shipping.city }}, {{ shipping.state }}<br>
+                    {{ shipping.zipcode }}
+                </div>
+                {% else %}
+                <div style="color: var(--text-secondary);">Digital Product / No address needed</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style media="print">
+    nav, .sub-nav, footer, .btn-primary, i { display: none !important; }
+    .product-card { border: 1px solid #ccc !important; box-shadow: none !important; }
+</style>
+{% endblock %}

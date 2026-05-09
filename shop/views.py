@@ -6,14 +6,15 @@ import json
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from . inherit import cartData
-
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.timezone import now
 
 def index(request):
     data = cartData(request)
     cartItems = data['cartItems']
     
-    products = Product.objects.all().select_related('category', 'brand', 'seller')
+    products = Product.objects.filter(is_deleted=False).select_related('category', 'brand', 'seller')
     categories = Category.objects.all()
     brands = Brand.objects.all()
     
@@ -117,6 +118,11 @@ def checkout(request):
         shipping_adress.save()
         if total == order.get_cart_total:
             order.complete = True
+            # Reduce stock logic
+            for item in order.orderitem_set.all():
+                p = item.product
+                p.stock = max(0, p.stock - item.quantity)
+                p.save()
         order.save()
         id = order.id  
         alert = True
@@ -169,16 +175,12 @@ def product_view(request, myid):
     return render(request, "product_view.html", {'product':product, 'cartItems':cartItems, 'feature':feature, 'reviews':reviews})
 
 def search(request):
-    # Redirect to index for all filtering and searching logic
     return redirect(f"/?q={request.GET.get('q', '')}")
-
 
 def change_password(request):
     if not request.user.is_authenticated:
         return redirect('/login')
     data = cartData(request)
-    items = data['items']
-    order = data['order']
     cartItems = data['cartItems']
     if request.method == "POST":
         current_password = request.POST['current_password']
@@ -211,8 +213,6 @@ def contact(request):
 
 def loggedin_contact(request):
     data = cartData(request)
-    items = data['items']
-    order = data['order']
     cartItems = data['cartItems']
     if request.method=="POST":       
         name = request.user
@@ -229,18 +229,13 @@ def tracker(request):
     if not request.user.is_authenticated:
         return redirect('/login')
     data = cartData(request)
-    items = data['items']
-    order = data['order']
     cartItems = data['cartItems']
     if request.method == "POST":
         order_id = request.POST['order_id']
-        order = Order.objects.filter(id=order_id).first()
-        order_items = OrderItem.objects.filter(order=order)
+        order_items = OrderItem.objects.filter(order_id=order_id)
         update_order = UpdateOrder.objects.filter(order_id=order_id)
-        print(update_order)
-        return render(request, "tracker.html", {'order_items':order_items, 'update_order':update_order})
+        return render(request, "tracker.html", {'order_items':order_items, 'update_order':update_order, 'cartItems': cartItems})
     return render(request, "tracker.html", {'cartItems':cartItems})
-
 
 def register(request):
     if request.user.is_authenticated:
@@ -263,7 +258,6 @@ def register(request):
             user.save()
             customers.save()
             
-            # Auto login after registration
             login(request, user)
             return redirect("/")
     return render(request, "register.html")
@@ -288,6 +282,7 @@ def Login(request):
 def Logout(request):
     logout(request)
     return redirect("/")
+
 def wishlist(request):
     if not request.user.is_authenticated:
         return redirect('/login/')
@@ -323,65 +318,43 @@ def profile(request):
     orders = Order.objects.filter(customer=customer).order_by('-date_ordered')
     return render(request, 'profile.html', {'orders': orders, 'cartItems': cartItems, 'customer': customer})
 
-
 def generic_placeholder(request, page_title):
     data = cartData(request)
     cartItems = data['cartItems']
     return render(request, 'placeholder.html', {'page_title': page_title, 'cartItems': cartItems})
 
-
 def seller_signup(request):
     if not request.user.is_authenticated:
         return redirect('/login/')
-    
-    # Check if user is already a seller
     if Seller.objects.filter(user=request.user).exists():
         return redirect('/seller_dashboard/')
-        
     data = cartData(request)
     cartItems = data['cartItems']
-    
     if request.method == 'POST':
         company_name = request.POST.get('company_name')
         description = request.POST.get('description')
-        
         if company_name and description:
-            Seller.objects.create(
-                user=request.user,
-                company_name=company_name,
-                description=description,
-                verified=False # Requires admin approval
-            )
+            Seller.objects.create(user=request.user, company_name=company_name, description=description, verified=False)
             return redirect('/seller_dashboard/')
         else:
             return render(request, 'seller_signup.html', {'alert': True, 'cartItems': cartItems})
-            
     return render(request, 'seller_signup.html', {'cartItems': cartItems})
-
 
 def seller_dashboard(request):
     if not request.user.is_authenticated:
         return redirect('/login/')
-    
     try:
         seller = Seller.objects.get(user=request.user)
     except Seller.DoesNotExist:
         return redirect('/seller_signup/')
-        
     data = cartData(request)
     cartItems = data['cartItems']
-    
-    # Fetch real stats for the seller
     seller_products = Product.objects.filter(seller=seller)
     total_products = seller_products.count()
-    
-    # Fetch orders containing this seller's products
-    # This is a bit complex in V1 schema, but in V2 we can filter OrderItems
     seller_order_items = OrderItem.objects.filter(product__seller=seller)
     total_sales = sum([item.get_total for item in seller_order_items])
     total_orders = Order.objects.filter(orderitem__product__seller=seller).distinct().count()
     recent_orders = Order.objects.filter(orderitem__product__seller=seller, complete=True).distinct().order_by('-date_ordered')[:5]
-    
     context = {
         'seller': seller,
         'cartItems': cartItems,
@@ -389,44 +362,34 @@ def seller_dashboard(request):
         'total_sales': total_sales,
         'total_orders': total_orders,
         'recent_orders': recent_orders,
+        'seller_products': seller_products,
     }
-    
     return render(request, 'seller_dashboard.html', context)
-
 
 def seller_products(request):
     if not request.user.is_authenticated:
         return redirect('/login/')
-    
     try:
         seller = Seller.objects.get(user=request.user)
     except Seller.DoesNotExist:
         return redirect('/seller_signup/')
-        
     data = cartData(request)
     cartItems = data['cartItems']
-    
     products = Product.objects.filter(seller=seller).order_by('-date_added')
-    
     return render(request, 'seller_products.html', {'seller': seller, 'products': products, 'cartItems': cartItems})
-
 
 def seller_add_product(request):
     if not request.user.is_authenticated:
         return redirect('/login/')
-    
     try:
         seller = Seller.objects.get(user=request.user)
     except Seller.DoesNotExist:
         return redirect('/seller_signup/')
-        
     data = cartData(request)
     cartItems = data['cartItems']
-    
     categories = Category.objects.all()
     subcategories = SubCategory.objects.all()
     brands = Brand.objects.all()
-    
     if request.method == 'POST':
         name = request.POST.get('name')
         sku = request.POST.get('sku')
@@ -440,73 +403,157 @@ def seller_add_product(request):
         stock = request.POST.get('stock')
         tags = request.POST.get('tags')
         image = request.FILES.get('image')
-        
-        # Calculate offer percentage if discount price provided
         offer_percentage = 0
         if price and discount_price:
             p = float(price)
             dp = float(discount_price)
             if p > dp:
                 offer_percentage = ((p - dp) / p) * 100
-
-        product = Product.objects.create(
-            seller=seller,
-            name=name,
-            sku=sku,
-            category_id=category_id,
+        Product.objects.create(
+            seller=seller, name=name, sku=sku, category_id=category_id,
             subcategory_id=subcategory_id if subcategory_id else None,
-            brand_id=brand_id,
-            short_description=short_description,
-            description=description,
-            price=price,
+            brand_id=brand_id, short_description=short_description,
+            description=description, price=price,
             discount_price=discount_price if discount_price else None,
-            offer_percentage=offer_percentage,
-            stock=stock,
-            tags=tags,
-            image=image
+            offer_percentage=offer_percentage, stock=stock, tags=tags, image=image
         )
         return redirect('/seller_products/')
-        
     context = {
-        'seller': seller,
-        'cartItems': cartItems,
-        'categories': categories,
-        'subcategories': subcategories,
-        'brands': brands
+        'seller': seller, 'cartItems': cartItems, 'categories': categories,
+        'subcategories': subcategories, 'brands': brands
     }
     return render(request, 'seller_add_product.html', context)
-
 
 def admin_dashboard(request):
     if not request.user.is_staff:
         return redirect('/')
-        
     data = cartData(request)
     cartItems = data['cartItems']
-    
-    # Advanced stats for the platform owner
     seller_count = Seller.objects.count()
     customer_count = Customer.objects.count()
     unverified_sellers = Seller.objects.filter(verified=False)
     pending_approvals = unverified_sellers.count()
-    
     all_orders = Order.objects.filter(complete=True).order_by('-date_ordered')
-    pending_orders = all_orders.count() # Mock count for now
+    pending_orders = all_orders.count()
     total_revenue = sum([order.get_cart_total for order in all_orders])
-    
     new_today = User.objects.filter(date_joined__date=now().date()).count()
-    
     context = {
-        'cartItems': cartItems,
-        'seller_count': seller_count,
-        'customer_count': customer_count,
-        'unverified_sellers': unverified_sellers,
-        'pending_approvals': pending_approvals,
-        'all_orders': all_orders[:10],
-        'pending_orders': pending_orders,
-        'total_revenue': total_revenue,
-        'new_today': new_today
+        'cartItems': cartItems, 'seller_count': seller_count, 'customer_count': customer_count,
+        'unverified_sellers': unverified_sellers, 'pending_approvals': pending_approvals,
+        'all_orders': all_orders[:10], 'pending_orders': pending_orders,
+        'total_revenue': total_revenue, 'new_today': new_today
     }
-    
     return render(request, 'admin_dashboard.html', context)
 
+def seller_orders(request):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+    try:
+        seller = Seller.objects.get(user=request.user)
+    except Seller.DoesNotExist:
+        return redirect('/seller_signup/')
+    data = cartData(request)
+    cartItems = data['cartItems']
+    order_items = OrderItem.objects.filter(product__seller=seller, order__complete=True)
+    order_ids = order_items.values_list('order_id', flat=True).distinct()
+    orders_qs = Order.objects.filter(id__in=order_ids).order_by('-date_ordered')
+    order_search = request.GET.get('order_search')
+    if order_search:
+        orders_qs = orders_qs.filter(Q(id__icontains=order_search) | Q(customer__name__icontains=order_search))
+    orders_data = []
+    for order in orders_qs:
+        items = order_items.filter(order=order)
+        seller_total = sum([item.get_total for item in items])
+        status_obj = UpdateOrder.objects.filter(order_id=order).last()
+        status = status_obj.desc if status_obj else 'Confirmed'
+        orders_data.append({'order': order, 'items': items, 'seller_total': seller_total, 'status': status})
+    context = {'seller': seller, 'orders': orders_data, 'cartItems': cartItems}
+    return render(request, 'seller_orders.html', context)
+
+@csrf_exempt
+def update_order_status(request, order_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        new_status = data.get('status')
+        order = Order.objects.get(id=order_id)
+        UpdateOrder.objects.create(order_id=order, desc=new_status)
+        return JsonResponse({'status': 'success'})
+
+def seller_order_details(request, order_id):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+    try:
+        seller = Seller.objects.get(user=request.user)
+    except Seller.DoesNotExist:
+        return redirect('/seller_signup/')
+    order = Order.objects.get(id=order_id)
+    items = OrderItem.objects.filter(order=order, product__seller=seller)
+    seller_total = sum([item.get_total for item in items])
+    shipping = CheckoutDetail.objects.filter(order=order).first()
+    tracking_history = UpdateOrder.objects.filter(order_id=order).order_by('-datetime')
+    context = {
+        'order': order, 'items': items, 'seller_total': seller_total,
+        'shipping': shipping, 'tracking_history': tracking_history, 'seller': seller
+    }
+    return render(request, 'seller_order_details.html', context)
+
+def seller_edit_product(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+    try:
+        seller = Seller.objects.get(user=request.user)
+    except Seller.DoesNotExist:
+        return redirect('/seller_signup/')
+    product = Product.objects.get(id=product_id, seller=seller)
+    if request.method == 'POST':
+        product.name = request.POST.get('name')
+        product.sku = request.POST.get('sku')
+        product.category_id = request.POST.get('category')
+        product.brand_id = request.POST.get('brand')
+        product.short_description = request.POST.get('short_description')
+        product.description = request.POST.get('description')
+        product.price = request.POST.get('price')
+        product.discount_price = request.POST.get('discount_price') if request.POST.get('discount_price') else None
+        product.stock = request.POST.get('stock')
+        product.tags = request.POST.get('tags')
+        if request.FILES.get('image'):
+            product.image = request.FILES.get('image')
+        product.save()
+        return redirect('/seller_products/')
+    categories = Category.objects.all()
+    brands = Brand.objects.all()
+    context = {'product': product, 'categories': categories, 'brands': brands, 'cartItems': cartData(request)['cartItems']}
+    return render(request, 'seller_edit_product.html', context)
+
+def seller_delete_product(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+    try:
+        seller = Seller.objects.get(user=request.user)
+    except Seller.DoesNotExist:
+        return redirect('/seller_signup/')
+    product = Product.objects.get(id=product_id, seller=seller)
+    product.is_deleted = True
+    product.save()
+    return redirect('/seller_products/')
+
+def seller_analytics(request):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+    try:
+        seller = Seller.objects.get(user=request.user)
+    except Seller.DoesNotExist:
+        return redirect('/seller_signup/')
+    data = cartData(request)
+    cartItems = data['cartItems']
+    seller_order_items = OrderItem.objects.filter(product__seller=seller)
+    total_revenue = sum([item.get_total for item in seller_order_items])
+    total_orders = Order.objects.filter(orderitem__product__seller=seller).distinct().count()
+    total_customers = Order.objects.filter(orderitem__product__seller=seller).values('customer').distinct().count()
+    monthly_revenue = total_revenue
+    context = {
+        'seller': seller, 'cartItems': cartItems, 'total_revenue': total_revenue,
+        'total_orders': total_orders, 'total_customers': total_customers,
+        'monthly_revenue': monthly_revenue, 'conversion_rate': '3.2%'
+    }
+    return render(request, 'seller_analytics.html', context)

@@ -1,0 +1,61 @@
+<!-- Seller Sidebar Snippet -->
+<div class="product-card" style="padding: 20px; position: sticky; top: 100px;">
+    <div style="text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+        <div style="width: 80px; height: 80px; background: var(--bg-dark); color: var(--accent-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 2rem; border: 2px solid var(--accent-gold);">
+            {{ seller.company_name|slice:":1"|upper }}
+        </div>
+        <h3 style="margin: 0;">{{ seller.company_name }}</h3>
+        {% if seller.verified %}
+            <span style="color: #10b981; font-size: 0.8rem; font-weight: bold;"><i class="fas fa-check-circle"></i> Verified Seller</span>
+        {% else %}
+            <span style="color: var(--accent-gold); font-size: 0.8rem; font-weight: bold;"><i class="fas fa-clock"></i> Verification Pending</span>
+        {% endif %}
+    </div>
+
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        <li style="margin-bottom: 10px;">
+            <a href="/seller_dashboard/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
+                {% if '/seller_dashboard' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+        </li>
+        <li style="margin-bottom: 10px;">
+            <a href="/seller_products/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
+                {% if '/seller_products' in request.path or '/seller_add' in request.path or '/seller_edit' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
+                <i class="fas fa-box"></i> My Products
+            </a>
+        </li>
+        <li style="margin-bottom: 10px;">
+            <a href="/seller_orders/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
+                {% if '/seller_orders' in request.path or '/seller_order_details' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
+                <i class="fas fa-shopping-bag"></i> Orders
+            </a>
+        </li>
+        <li style="margin-bottom: 10px;">
+            <a href="/seller_analytics/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
+                {% if '/seller_analytics' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
+                <i class="fas fa-bullseye"></i> Analytics
+            </a>
+        </li>
+        <li style="margin-bottom: 10px;">
+            <a href="/seller_reviews/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; color: var(--text-primary); text-decoration: none; transition: 0.3s;">
+                <i class="fas fa-star"></i> Reviews
+            </a>
+        </li>
+        <li style="margin-bottom: 10px;">
+            <a href="/seller_inventory/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; color: var(--text-primary); text-decoration: none; transition: 0.3s;">
+                <i class="fas fa-warehouse"></i> Inventory
+            </a>
+        </li>
+        <li style="margin-bottom: 10px;">
+            <a href="/settings/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; color: var(--text-primary); text-decoration: none; transition: 0.3s;">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </li>
+        <li style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+            <a href="/profile/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--text-secondary); text-decoration: none; border-radius: 8px;">
+                <i class="fas fa-user-circle"></i> Back to Profile
+            </a>
+        </li>
+    </ul>
+</div>

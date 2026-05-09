@@ -90,6 +90,7 @@ class Product(models.Model):
     is_trending = models.BooleanField(default=False)
     is_featured = models.BooleanField(default=False)
     is_bestseller = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -106,6 +107,17 @@ class Product(models.Model):
         if reviews:
             return sum([r.rating for r in reviews]) / len(reviews)
         return 0
+
+    @property
+    def stock_status(self):
+        if self.stock <= 0:
+            return {'label': 'Out of Stock', 'color': '#ef4444'}
+        elif self.stock < 5:
+            return {'label': 'Critical Stock', 'color': '#ef4444'}
+        elif self.stock < 10:
+            return {'label': 'Low Stock', 'color': '#f59e0b'}
+        else:
+            return {'label': 'In Stock', 'color': '#10b981'}
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")

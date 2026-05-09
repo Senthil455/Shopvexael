@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | Analytics Dashboard{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+        
+        <!-- Sidebar Navigation -->
+        <div style="flex: 0 0 280px;">
+            {% include 'seller_sidebar.html' %}
+        </div>
+
+        <!-- Main Analytics Content -->
+        <div style="flex: 1; min-width: 600px;">
+            <h1 style="margin-bottom: 30px;">Analytics & Insights</h1>
+
+            <!-- KPI Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
+                <div class="product-card" style="padding: 25px;">
+                    <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 10px;">Total Revenue</div>
+                    <div style="font-size: 1.8rem; font-weight: bold; color: var(--accent-gold);">₹{{ total_revenue }}</div>
+                </div>
+                <div class="product-card" style="padding: 25px;">
+                    <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 10px;">Monthly Earnings</div>
+                    <div style="font-size: 1.8rem; font-weight: bold;">₹{{ monthly_revenue }}</div>
+                </div>
+                <div class="product-card" style="padding: 25px;">
+                    <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 10px;">Orders Count</div>
+                    <div style="font-size: 1.8rem; font-weight: bold;">{{ total_orders }}</div>
+                </div>
+                <div class="product-card" style="padding: 25px;">
+                    <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 10px;">Conversion Rate</div>
+                    <div style="font-size: 1.8rem; font-weight: bold; color: #10b981;">{{ conversion_rate }}</div>
+                </div>
+            </div>
+
+            <!-- Charts (Placeholder visualization) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px;">
+                <div class="product-card" style="padding: 25px;">
+                    <h3 style="margin-top: 0; margin-bottom: 25px;">Sales Trend</h3>
+                    <div style="height: 300px; display: flex; align-items: flex-end; gap: 5px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px dashed var(--border-color);">
+                        {% for i in "123456789012" %}
+                        <div style="flex: 1; height: {% cycle '20' '40' '35' '60' '80' '70' '90' '50' '30' '45' '55' '65' %}%; background: var(--accent-gold); opacity: 0.7; border-radius: 3px;"></div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="product-card" style="padding: 25px;">
+                    <h3 style="margin-top: 0; margin-bottom: 25px;">Customer Growth</h3>
+                    <div style="height: 300px; position: relative; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px dashed var(--border-color);">
+                        <svg viewBox="0 0 400 200" style="width: 100%; height: 100%;">
+                            <path d="M0,180 Q50,150 100,160 T200,100 T300,80 T400,20" fill="none" stroke="var(--accent-gold)" stroke-width="4" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Insights -->
+            <div class="product-card" style="padding: 25px;">
+                <h3 style="margin-top: 0; margin-bottom: 25px;">Top Selling Products</h3>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    {% for item in top_products %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <img src="https://picsum.photos/seed/{{forloop.counter}}/50/50" style="width: 40px; height: 40px; border-radius: 4px;">
+                            <div>
+                                <div style="font-weight: bold;">Sample Product Name</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">24 sales this month</div>
+                            </div>
+                        </div>
+                        <div style="font-weight: bold; color: var(--accent-gold);">₹4,299</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

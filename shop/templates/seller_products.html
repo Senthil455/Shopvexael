@@ -8,32 +8,7 @@
         
         <!-- Sidebar Navigation (Same as Dashboard) -->
         <div style="flex: 0 0 280px;">
-            <div class="product-card" style="padding: 20px; position: sticky; top: 100px;">
-                <div style="text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
-                    <div style="width: 80px; height: 80px; background: var(--bg-dark); color: var(--accent-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 2rem; border: 2px solid var(--accent-gold);">
-                        {{ seller.company_name|slice:":1"|upper }}
-                    </div>
-                    <h3 style="margin: 0;">{{ seller.company_name }}</h3>
-                </div>
-
-                <ul style="list-style: none; padding: 0; margin: 0;">
-                    <li style="margin-bottom: 10px;">
-                        <a href="/seller_dashboard/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--text-primary); text-decoration: none; border-radius: 8px;">
-                            <i class="fas fa-chart-line"></i> Dashboard
-                        </a>
-                    </li>
-                    <li style="margin-bottom: 10px;">
-                        <a href="/seller_products/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); text-decoration: none; border-radius: 8px; font-weight: bold;">
-                            <i class="fas fa-box"></i> My Products
-                        </a>
-                    </li>
-                    <li style="margin-bottom: 10px;">
-                        <a href="/seller_orders/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--text-primary); text-decoration: none; border-radius: 8px;">
-                            <i class="fas fa-shopping-bag"></i> Orders
-                        </a>
-                    </li>
-                </ul>
-            </div>
+            {% include 'seller_sidebar.html' %}
         </div>
 
         <!-- Main Content -->
@@ -75,13 +50,7 @@
                                     <td style="padding: 15px 10px; font-size: 0.9rem;">{{ product.category.name }}</td>
                                     <td style="padding: 15px 10px; font-weight: bold; color: var(--accent-gold);">₹{{ product.final_price }}</td>
                                     <td style="padding: 15px 10px;">
-                                        {% if product.stock > 10 %}
-                                            <span style="color: #10b981;">{{ product.stock }} In Stock</span>
-                                        {% elif product.stock > 0 %}
-                                            <span style="color: var(--accent-gold);">{{ product.stock }} Low Stock</span>
-                                        {% else %}
-                                            <span style="color: #ef4444;">Out of Stock</span>
-                                        {% endif %}
+                                        <span style="color: {{ product.stock_status.color }}; font-weight: bold;">{{ product.stock_status.label }} ({{ product.stock }})</span>
                                     </td>
                                     <td style="padding: 15px 10px;">
                                         <div style="display: flex; gap: 10px;">

@@ -1,45 +1,132 @@
 {% extends 'base.html' %}
-{% block title%} Order Tracker {% endblock %}
-{% block body %}
-<div class="container py-5">
-    <div class="col">
-        <h2>Enter your Order Id to track your order.</h2>
-        <form method="post">{% csrf_token %}
-            <div class="form-row">
-                <div class="form-group col-md-12">
-                    <input type="number" class="form-control mt-3" name="order_id" placeholder="Order Id">
-                </div>  
-                <button type="submit" class="btn btn-primary mt-4">Track Order</button>
-            </div>
-    </div>
-    <div class="col my-4">
-        <h4>Order Items:</h4>
-        <div class="my-4">
-            {% for i in order_items %}
-            <ol class="list-group">
-                <li class="list-group-item d-flex justify-content-between ">
-                  <div class="ms-2 me-auto">
-                    <div class="fw-bold">{{forloop.counter}}. {{i.product}}</div>
-                  </div>
-                  <span class="badge bg-primary rounded-pill">Qty: {{i.quantity}}</span>
-                </li>
-              </ol>
-            {% endfor %}
+{% load static %}
+{% block title %}Shopvexael | Track Your Order{% endblock %}
 
-        </div>
-        <h4>Your Order Details:</h4>
-        <div class="my-4">
-            {% for i in update_order %}
-            <ol class="list-group">
-                <li class="list-group-item d-flex justify-content-between ">
-                  <div class="ms-2 me-auto">
-                    <div class="fw-bold">{{i.desc}}</div>
-                  </div>
-                  <span class="badge bg-primary rounded-pill">Date: {{i.date}}</span>
-                </li>
-              </ol>
-            {% endfor %}
+{% block body %}
+<div style="padding: 60px 20px; max-width: 800px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 50px;">
+        <h1 style="margin: 0; font-size: 2.5rem;">Track Your Order</h1>
+        <p style="color: var(--text-secondary);">Enter your Order ID and Email to see your delivery progress.</p>
+    </div>
+
+    <div class="product-card" style="padding: 40px; margin-bottom: 40px;">
+        <form id="trackerForm">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                <div class="form-group">
+                    <label>Order ID</label>
+                    <input type="number" name="order_id" class="form-control" placeholder="e.g. 101" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="e.g. john@example.com" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" style="padding: 15px; font-size: 1.1rem;">Track Order</button>
+        </form>
+    </div>
+
+    <!-- Tracking Results (Hidden by default) -->
+    <div id="items" style="display: none;">
+        <div class="product-card" style="padding: 40px;">
+            <h3 id="status-header" style="text-align: center; margin-bottom: 40px; color: var(--accent-gold);"></h3>
+            
+            <!-- Progress Bar -->
+            <div style="display: flex; justify-content: space-between; position: relative; margin-bottom: 60px; padding: 0 40px;">
+                <div style="position: absolute; top: 15px; left: 60px; right: 60px; height: 4px; background: var(--border-color); z-index: 0;"></div>
+                <div id="progress-line" style="position: absolute; top: 15px; left: 60px; width: 0%; height: 4px; background: var(--accent-gold); z-index: 1; transition: width 1s ease-in-out;"></div>
+                
+                <div class="step" style="position: relative; z-index: 2; text-align: center;">
+                    <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-gold); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: black;"><i class="fas fa-check"></i></div>
+                    <div style="font-size: 0.8rem; font-weight: bold;">Placed</div>
+                </div>
+                <div class="step" data-status="Confirmed" style="position: relative; z-index: 2; text-align: center;">
+                    <div class="step-circle" style="width: 35px; height: 35px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--border-color); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-box"></i></div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Confirmed</div>
+                </div>
+                <div class="step" data-status="Shipped" style="position: relative; z-index: 2; text-align: center;">
+                    <div class="step-circle" style="width: 35px; height: 35px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--border-color); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-truck"></i></div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Shipped</div>
+                </div>
+                <div class="step" data-status="Delivered" style="position: relative; z-index: 2; text-align: center;">
+                    <div class="step-circle" style="width: 35px; height: 35px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--border-color); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-home"></i></div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Delivered</div>
+                </div>
+            </div>
+
+            <div id="citems" style="list-style: none; padding: 0;"></div>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('trackerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = {
+            order_id: formData.get('order_id'),
+            email: formData.get('email'),
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        };
+
+        fetch('/tracker/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: new URLSearchParams(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'success') {
+                const results = document.getElementById('items');
+                results.style.display = 'block';
+                
+                const updates = data.updates;
+                const lastStatus = updates.length > 0 ? updates[0].text : 'Placed';
+                document.getElementById('status-header').innerText = `Current Status: ${lastStatus}`;
+                
+                // Update Progress UI
+                let progress = 0;
+                if(lastStatus === 'Confirmed') progress = 33;
+                if(lastStatus === 'Shipped') progress = 66;
+                if(lastStatus === 'Delivered') progress = 100;
+                
+                document.getElementById('progress-line').style.width = progress + '%';
+                
+                const steps = document.querySelectorAll('.step');
+                steps.forEach(step => {
+                    const status = step.dataset.status;
+                    const circle = step.querySelector('.step-circle');
+                    const label = step.querySelector('div:last-child');
+                    
+                    if(status === lastStatus || (progress >= 33 && status === 'Confirmed') || (progress >= 66 && status === 'Shipped') || progress === 100) {
+                        if(circle) {
+                            circle.style.background = 'var(--accent-gold)';
+                            circle.style.borderColor = 'var(--accent-gold)';
+                            circle.style.color = 'black';
+                        }
+                        label.style.color = 'var(--text-primary)';
+                        label.style.fontWeight = 'bold';
+                    }
+                });
+
+                // Display items
+                let itemsHtml = '<h4 style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px;">Your Items</h4>';
+                const cartItems = JSON.parse(data.itemsJson);
+                cartItems.forEach(item => {
+                    itemsHtml += `<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>${item.name} x ${item.qty}</span>
+                        <span style="font-weight: bold;">₹${item.price}</span>
+                    </div>`;
+                });
+                document.getElementById('citems').innerHTML = itemsHtml;
+                
+            } else {
+                showToast('No order found with these details.', 'error');
+            }
+        });
+    });
+</script>
 {% endblock %}

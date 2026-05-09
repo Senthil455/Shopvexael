@@ -26,6 +26,14 @@ urlpatterns = [
     path("seller_dashboard/", views.seller_dashboard, name="seller_dashboard"),
     path("seller_products/", views.seller_products, name="seller_products"),
     path("seller_add_product/", views.seller_add_product, name="seller_add_product"),
+    path("seller_edit_product/<int:product_id>/", views.seller_edit_product, name="seller_edit_product"),
+    path("seller_delete_product/<int:product_id>/", views.seller_delete_product, name="seller_delete_product"),
+    path("seller_orders/", views.seller_orders, name="seller_orders"),
+    path("seller_analytics/", views.seller_analytics, name="seller_analytics"),
+    path("seller_reviews/", lambda r: views.generic_placeholder(r, 'Seller Reviews'), name="seller_reviews"),
+    path("seller_inventory/", lambda r: views.generic_placeholder(r, 'Inventory Management'), name="seller_inventory"),
+    path("seller_order_details/<int:order_id>/", views.seller_order_details, name="seller_order_details"),
+    path("update_order_status/<int:order_id>/", views.update_order_status, name="update_order_status"),
     
     # Admin Panel Routes
     path("admin_dashboard/", views.admin_dashboard, name="admin_dashboard"),

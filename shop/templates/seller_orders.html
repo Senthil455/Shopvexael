@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | Manage Orders{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+        
+        <!-- Sidebar Navigation -->
+        <div style="flex: 0 0 280px;">
+            {% include 'seller_sidebar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div style="flex: 1; min-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1 style="margin: 0;">Manage Orders</h1>
+                <div style="display: flex; gap: 10px;">
+                    <form method="GET" style="display: flex; gap: 10px;">
+                        <input type="text" name="order_search" placeholder="Search Order ID or Customer..." class="form-control" style="width: 250px;">
+                        <select name="status_filter" class="form-control" style="width: 150px;">
+                            <option value="">All Statuses</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Delivered">Delivered</option>
+                        </select>
+                        <button type="submit" class="btn-primary" style="width: auto; padding: 0 20px;"><i class="fas fa-filter"></i></button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="product-card" style="padding: 25px;">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 0.9rem;">
+                                <th style="padding: 15px 10px;">Order ID</th>
+                                <th style="padding: 15px 10px;">Customer</th>
+                                <th style="padding: 15px 10px;">Products</th>
+                                <th style="padding: 15px 10px;">Total</th>
+                                <th style="padding: 15px 10px;">Status</th>
+                                <th style="padding: 15px 10px;">Date</th>
+                                <th style="padding: 15px 10px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if orders %}
+                                {% for order_data in orders %}
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td style="padding: 15px 10px; font-weight: bold;">#{{ order_data.order.id }}</td>
+                                    <td style="padding: 15px 10px;">
+                                        <div style="font-weight: bold;">{{ order_data.order.customer.name }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ order_data.order.customer.email }}</div>
+                                    </td>
+                                    <td style="padding: 15px 10px;">
+                                        {% for item in order_data.items %}
+                                            <div style="font-size: 0.85rem;">{{ item.product.name }} x {{ item.quantity }}</div>
+                                        {% endfor %}
+                                    </td>
+                                    <td style="padding: 15px 10px; color: var(--accent-gold); font-weight: bold;">₹{{ order_data.seller_total }}</td>
+                                    <td style="padding: 15px 10px;">
+                                        <select class="form-control status-updater" data-order="{{ order_data.order.id }}" style="font-size: 0.75rem; padding: 5px; width: 110px;">
+                                            <option value="Confirmed" {% if order_data.status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                                            <option value="Shipped" {% if order_data.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                                            <option value="Delivered" {% if order_data.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                        </select>
+                                    </td>
+                                    <td style="padding: 15px 10px; font-size: 0.85rem;">{{ order_data.order.date_ordered|date:"M d, Y" }}</td>
+                                    <td style="padding: 15px 10px;">
+                                        <a href="/seller_order_details/{{ order_data.order.id }}/" class="btn-primary" style="width: auto; padding: 5px 12px; font-size: 0.8rem; background: var(--bg-dark); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-decoration: none;">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                                        <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+                                        No orders found matching your criteria.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.status-updater').forEach(select => {
+        select.addEventListener('change', function() {
+            const orderId = this.dataset.order;
+            const newStatus = this.value;
+            
+            fetch(`/update_order_status/${orderId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    showToast('Order status updated successfully!');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

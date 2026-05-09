@@ -132,9 +132,19 @@
                             <strong style="color: var(--accent-gold);">{{review.customer.name}}</strong>
                             <span style="color: var(--text-secondary); font-size: 0.9rem;">{{review.datetime|date:"M d, Y"}}</span>
                         </div>
-                        <div style="color: var(--accent-gold); margin-bottom: 10px;">
-                            <!-- Simple star display logic (can be improved with custom template tags) -->
-                            Rating: {{review.rating}}/5 <i class="fas fa-star"></i>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <div style="color: var(--accent-gold);">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% if review.verified_purchase %}
+                            <span style="font-size: 0.75rem; color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px;"><i class="fas fa-check-circle"></i> Verified Purchase</span>
+                            {% endif %}
                         </div>
                         <p style="margin: 0; line-height: 1.5; color: var(--text-primary);">
                             {{review.content}}
