@@ -1,0 +1,12 @@
+[build]
+  command = "chmod +x build.sh && ./build.sh"
+  publish = "staticfiles"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/django_serverless"
+  status = 200
