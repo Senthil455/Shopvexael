@@ -38,44 +38,49 @@
 {% block body %}
 <div class="hero-banner">
     <div>
-        <h1 style="margin:0; font-size: 3rem;">Welcome to Shop<span style="color:var(--accent-gold)">vexael</span></h1>
-        <p style="font-size: 1.2rem; font-weight: normal; margin-top:10px;">Premium Products. Unbeatable Prices.</p>
+        <h1 style="margin:0; font-size: 1.8rem;">Welcome to Shop<span style="color:var(--accent-gold)">vexael</span></h1>
+        <p style="font-size: 0.9rem; font-weight: normal; margin-top:2px;">Premium Products. Unbeatable Prices.</p>
     </div>
 </div>
 
-<div style="padding: 20px;">
+<div style="padding: 10px 20px;">
     {% if query %}
-        <h2>Search Results for "{{ query }}"</h2>
+    <h2>Search Results for "{{ query }}"</h2>
     {% else %}
-        <h2>Trending Products</h2>
+    <h2>Trending Products</h2>
     {% endif %}
-    
+
     {% if products %}
     <div class="product-grid">
         {% for product in products %}
         <div class="product-card">
             <a href="/product_view/{{product.id}}/" style="text-decoration:none; position:relative;">
                 {% if product.is_bestseller %}
-                    <span style="position:absolute; top:10px; left:10px; background:var(--accent-gold); color:var(--bg-dark); padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; z-index:10;">Best Seller</span>
+                <span
+                    style="position:absolute; top:10px; left:10px; background:var(--accent-gold); color:var(--bg-dark); padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; z-index:10;">Best
+                    Seller</span>
                 {% elif product.is_trending %}
-                    <span style="position:absolute; top:10px; left:10px; background:var(--accent-red); color:white; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; z-index:10;">Trending</span>
+                <span
+                    style="position:absolute; top:10px; left:10px; background:var(--accent-red); color:white; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; z-index:10;">Trending</span>
                 {% endif %}
-                
+
                 {% if product.image %}
-                    <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}">
+                <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}">
                 {% else %}
-                    <img src="https://picsum.photos/seed/{{product.id}}/600/600" class="product-image" alt="{{ product.name }}">
+                <img src="https://picsum.photos/seed/{{product.id}}/600/600" class="product-image"
+                    alt="{{ product.name }}">
                 {% endif %}
             </a>
             <div class="product-info">
                 <a href="/product_view/{{product.id}}/" style="text-decoration:none;">
                     <h3 class="product-title">{{product.name}}</h3>
                 </a>
-                
+
                 <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">
-                    By <span style="color:var(--accent-gold);">{{product.seller.company_name|default:"Shopvexael"}}</span>
+                    By <span
+                        style="color:var(--accent-gold);">{{product.seller.company_name|default:"Shopvexael"}}</span>
                 </div>
-                
+
                 <div style="color: var(--accent-gold); font-size:0.8rem; margin-bottom:10px;">
                     <i class="fas fa-star"></i> {{product.average_rating|floatformat:1}} ({{product.review_set.count}})
                 </div>
@@ -84,98 +89,24 @@
                     ₹{{product.final_price}}
                     {% if product.discount_price %}
                     <span class="original">₹{{product.price}}</span>
-                    <span style="font-size:0.75rem; color:#10b981; margin-left:5px;">(-{{product.offer_percentage}}%)</span>
+                    <span
+                        style="font-size:0.75rem; color:#10b981; margin-left:5px;">(-{{product.offer_percentage}}%)</span>
                     {% endif %}
                 </div>
-                
+
                 {% if request.user.is_authenticated %}
-                <button data-product="{{product.id}}" data-action="add" class="btn-primary update-cart">Add To Cart</button>
+                <button data-product="{{product.id}}" data-action="add" class="btn-primary update-cart">Add To
+                    Cart</button>
                 {% else %}
-                <a href="/login/" class="btn-primary" style="text-align:center; text-decoration:none; display:block;">Login to Buy</a>
+                <a href="/login/" class="btn-primary"
+                    style="text-align:center; text-decoration:none; display:block;">Login to Buy</a>
                 {% endif %}
             </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-        <p>No products found matching your criteria.</p>
+    <p>No products found matching your criteria.</p>
     {% endif %}
 </div>
-{% endblock %}
-
-{% block js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebarLinks = document.querySelectorAll('.sidebar-list a');
-        const productGridContainer = document.querySelector('.product-grid').parentElement;
-        
-        sidebarLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const url = this.href;
-                
-                // Show a loading skeleton or opacity change
-                productGridContainer.style.opacity = '0.5';
-                
-                fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    
-                    const newGrid = doc.querySelector('.product-grid');
-                    const newHeader = doc.querySelector('.hero-banner + div h2');
-                    
-                    if (newGrid && newHeader) {
-                        document.querySelector('.product-grid').innerHTML = newGrid.innerHTML;
-                        document.querySelector('.hero-banner + div h2').innerHTML = newHeader.innerHTML;
-                        
-                        // Update history state so URL matches
-                        window.history.pushState({}, '', url);
-                    }
-                    productGridContainer.style.opacity = '1';
-                    
-                    // Re-attach Add to Cart event listeners
-                    attachCartEvents();
-                })
-                .catch(err => {
-                    productGridContainer.style.opacity = '1';
-                    console.error('Filtering failed', err);
-                });
-            });
-        });
-
-        // We need to re-attach the cart buttons after AJAX load
-        function attachCartEvents() {
-            var updateBtns = document.querySelectorAll('.update-cart');
-            for (var i = 0; i < updateBtns.length; i++) {
-                // Remove existing listeners by cloning
-                let oldBtn = updateBtns[i];
-                let newBtn = oldBtn.cloneNode(true);
-                oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-                
-                newBtn.addEventListener('click', function (e) {
-                    var productID = this.dataset.product;
-                    var action = this.dataset.action;
-                    var btn = this;
-                    
-                    if(btn.tagName === 'BUTTON' && action === 'add') {
-                        btn.innerHTML = 'Adding...';
-                        btn.disabled = true;
-                    }
-
-                    if (user == 'AnonymousUser') {
-                        addCookieItem(productID, action, btn);
-                    } else {
-                        updateUserOrder(productID, action, btn);
-                    }
-                });
-            }
-        }
-    });
-</script>
 {% endblock %}
