@@ -26,7 +26,11 @@
                 {% for item in items %}
                 <div style="display: grid; grid-template-columns: 2fr 3fr 1fr 1fr 1fr; gap: 10px; align-items: center; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <div>
-                        <img src="{{item.product.image.url}}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" alt="{{item.product.name}}">
+                        {% if item.product.image %}
+                            <img src="{{item.product.image.url}}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" alt="{{item.product.name}}">
+                        {% else %}
+                            <img src="https://picsum.photos/seed/{{item.product.id}}/200/200" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" alt="{{item.product.name}}">
+                        {% endif %}
                     </div>
                     <div>
                         <h4 style="margin: 0; font-size: 1.1rem;"><a href="/product_view/{{item.product.id}}/" style="color:var(--text-primary); text-decoration:none;">{{item.product.name}}</a></h4>

@@ -64,7 +64,7 @@
                 {% if product.image %}
                     <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}">
                 {% else %}
-                    <div class="product-image" style="display:flex; align-items:center; justify-content:center; background:#ccc; color:#333;">No Image</div>
+                    <img src="https://picsum.photos/seed/{{product.id}}/600/600" class="product-image" alt="{{ product.name }}">
                 {% endif %}
             </a>
             <div class="product-info">

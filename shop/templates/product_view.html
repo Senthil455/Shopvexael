@@ -12,7 +12,7 @@
                 {% if product.image %}
                     <img src="{{product.image.url}}" style="width: 100%; object-fit: contain; max-height: 500px;" alt="{{product.name}}">
                 {% else %}
-                    <div style="width: 100%; height: 400px; display:flex; align-items:center; justify-content:center; background:#ccc; color:#333;">No Image</div>
+                    <img src="https://picsum.photos/seed/{{product.id}}/800/800" style="width: 100%; object-fit: contain; max-height: 500px; border-radius: 8px;" alt="{{product.name}}">
                 {% endif %}
             </div>
         </div>
