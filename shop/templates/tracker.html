@@ -3,49 +3,52 @@
 {% block title %}Shopvexael | Track Your Order{% endblock %}
 
 {% block body %}
-<div style="padding: 60px 20px; max-width: 800px; margin: 0 auto;">
+<div style="padding: 60px 20px; max-width: 900px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: 50px;">
-        <h1 style="margin: 0; font-size: 2.5rem;">Track Your Order</h1>
-        <p style="color: var(--text-secondary);">Enter your Order ID and Email to see your delivery progress.</p>
+        <h1 style="margin: 0; font-size: 2.5rem; font-family: 'Outfit', sans-serif;">Track Your Order</h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem; margin-top: 10px;">Enter your credentials to see real-time delivery status.</p>
     </div>
 
-    <div class="product-card" style="padding: 40px; margin-bottom: 40px;">
+    <div class="product-card" style="padding: 40px; margin-bottom: 40px; border-bottom: 4px solid var(--accent-gold);">
         <form id="trackerForm">
             {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
                 <div class="form-group">
-                    <label>Order ID</label>
-                    <input type="number" name="order_id" class="form-control" placeholder="e.g. 101" required>
+                    <label style="color: var(--text-primary); font-weight: 500;">Order ID</label>
+                    <input type="number" name="order_id" class="form-control" placeholder="Found in your confirmation email" required style="padding: 15px; background: rgba(255,255,255,0.05);">
                 </div>
                 <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" name="email" class="form-control" placeholder="e.g. john@example.com" required>
+                    <label style="color: var(--text-primary); font-weight: 500;">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="Email used during checkout" required style="padding: 15px; background: rgba(255,255,255,0.05);">
                 </div>
             </div>
-            <button type="submit" class="btn-primary" style="padding: 15px; font-size: 1.1rem;">Track Order</button>
+            <button type="submit" id="track-btn" class="btn-primary" style="padding: 18px; font-size: 1.1rem; letter-spacing: 1px;"><i class="fas fa-search-location"></i> Track Status</button>
         </form>
     </div>
 
-    <!-- Tracking Results (Hidden by default) -->
-    <div id="items" style="display: none;">
-        <div class="product-card" style="padding: 40px;">
-            <h3 id="status-header" style="text-align: center; margin-bottom: 40px; color: var(--accent-gold);"></h3>
+    <!-- Tracking Results -->
+    <div id="tracker-results" style="display: none;" class="animate-fade">
+        <div class="product-card" style="padding: 40px; margin-bottom: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
+                <h3 style="margin: 0;">Order Status</h3>
+                <span id="current-status-badge" class="status-badge"></span>
+            </div>
             
-            <!-- Progress Bar -->
+            <!-- Progress Stepper -->
             <div style="display: flex; justify-content: space-between; position: relative; margin-bottom: 60px; padding: 0 40px;">
                 <div style="position: absolute; top: 15px; left: 60px; right: 60px; height: 4px; background: var(--border-color); z-index: 0;"></div>
                 <div id="progress-line" style="position: absolute; top: 15px; left: 60px; width: 0%; height: 4px; background: var(--accent-gold); z-index: 1; transition: width 1s ease-in-out;"></div>
                 
-                <div class="step" style="position: relative; z-index: 2; text-align: center;">
-                    <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-gold); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: black;"><i class="fas fa-check"></i></div>
+                <div class="step" data-status="Pending" style="position: relative; z-index: 2; text-align: center;">
+                    <div class="step-circle active" style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-gold); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: black;"><i class="fas fa-clipboard-list"></i></div>
                     <div style="font-size: 0.8rem; font-weight: bold;">Placed</div>
                 </div>
                 <div class="step" data-status="Confirmed" style="position: relative; z-index: 2; text-align: center;">
-                    <div class="step-circle" style="width: 35px; height: 35px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--border-color); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-box"></i></div>
+                    <div class="step-circle" style="width: 35px; height: 35px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--border-color); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-check-circle"></i></div>
                     <div style="font-size: 0.8rem; color: var(--text-secondary);">Confirmed</div>
                 </div>
                 <div class="step" data-status="Shipped" style="position: relative; z-index: 2; text-align: center;">
-                    <div class="step-circle" style="width: 35px; height: 35px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--border-color); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-truck"></i></div>
+                    <div class="step-circle" style="width: 35px; height: 35px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--border-color); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-shipping-fast"></i></div>
                     <div style="font-size: 0.8rem; color: var(--text-secondary);">Shipped</div>
                 </div>
                 <div class="step" data-status="Delivered" style="position: relative; z-index: 2; text-align: center;">
@@ -54,77 +57,136 @@
                 </div>
             </div>
 
-            <div id="citems" style="list-style: none; padding: 0;"></div>
+            <!-- Items Table -->
+            <div id="items-summary">
+                <h4 style="margin-bottom: 20px; font-family: 'Outfit', sans-serif;">Order Summary</h4>
+                <div id="items-list" style="display: flex; flex-direction: column; gap: 15px;"></div>
+            </div>
+        </div>
+
+        <!-- Detailed History -->
+        <div class="product-card" style="padding: 40px;">
+            <h3 style="margin-top: 0; margin-bottom: 30px;">Tracking History</h3>
+            <div id="tracking-timeline" style="position: relative; padding-left: 30px; display: flex; flex-direction: column; gap: 30px;">
+                <div style="position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border-color);"></div>
+                <!-- Timeline items injected here -->
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block js %}
 <script>
     document.getElementById('trackerForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        const btn = document.getElementById('track-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating Order...';
+        btn.disabled = true;
+
         const formData = new FormData(this);
         const data = {
             order_id: formData.get('order_id'),
-            email: formData.get('email'),
-            csrfmiddlewaretoken: '{{ csrf_token }}'
+            email: formData.get('email')
         };
 
         fetch('/tracker/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': '{{ csrf_token }}'
+                'X-CSRFToken': csrftoken
             },
             body: new URLSearchParams(data)
         })
         .then(response => response.json())
         .then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+
             if(data.status === 'success') {
-                const results = document.getElementById('items');
-                results.style.display = 'block';
+                const container = document.getElementById('tracker-results');
+                container.style.display = 'block';
                 
-                const updates = data.updates;
-                const lastStatus = updates.length > 0 ? updates[0].text : 'Placed';
-                document.getElementById('status-header').innerText = `Current Status: ${lastStatus}`;
+                // Set Current Status
+                const lastStatus = data.updates[0].status || 'Pending';
+                const badge = document.getElementById('current-status-badge');
+                badge.className = `status-badge ${lastStatus.toLowerCase()}`;
+                badge.innerText = lastStatus;
                 
-                // Update Progress UI
+                // Update Progress Line
                 let progress = 0;
                 if(lastStatus === 'Confirmed') progress = 33;
-                if(lastStatus === 'Shipped') progress = 66;
-                if(lastStatus === 'Delivered') progress = 100;
+                else if(lastStatus === 'Shipped') progress = 66;
+                else if(lastStatus === 'Delivered') progress = 100;
+                else if(lastStatus === 'Cancelled') progress = 0;
                 
                 document.getElementById('progress-line').style.width = progress + '%';
                 
+                // Update Step Icons
                 const steps = document.querySelectorAll('.step');
                 steps.forEach(step => {
                     const status = step.dataset.status;
                     const circle = step.querySelector('.step-circle');
                     const label = step.querySelector('div:last-child');
                     
-                    if(status === lastStatus || (progress >= 33 && status === 'Confirmed') || (progress >= 66 && status === 'Shipped') || progress === 100) {
-                        if(circle) {
-                            circle.style.background = 'var(--accent-gold)';
-                            circle.style.borderColor = 'var(--accent-gold)';
-                            circle.style.color = 'black';
-                        }
+                    let isActive = false;
+                    if(status === 'Pending') isActive = true;
+                    if(status === 'Confirmed' && progress >= 33) isActive = true;
+                    if(status === 'Shipped' && progress >= 66) isActive = true;
+                    if(status === 'Delivered' && progress >= 100) isActive = true;
+
+                    if(isActive) {
+                        circle.style.background = 'var(--accent-gold)';
+                        circle.style.borderColor = 'var(--accent-gold)';
+                        circle.style.color = 'black';
                         label.style.color = 'var(--text-primary)';
                         label.style.fontWeight = 'bold';
+                    } else {
+                        circle.style.background = 'var(--bg-dark)';
+                        circle.style.borderColor = 'var(--border-color)';
+                        circle.style.color = 'var(--text-secondary)';
+                        label.style.color = 'var(--text-secondary)';
+                        label.style.fontWeight = 'normal';
                     }
                 });
 
-                // Display items
-                let itemsHtml = '<h4 style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px;">Your Items</h4>';
-                const cartItems = JSON.parse(data.itemsJson);
-                cartItems.forEach(item => {
-                    itemsHtml += `<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span>${item.name} x ${item.qty}</span>
-                        <span style="font-weight: bold;">₹${item.price}</span>
-                    </div>`;
+                // Injected Items
+                const itemsList = document.getElementById('items-list');
+                itemsList.innerHTML = '';
+                const items = JSON.parse(data.itemsJson);
+                items.forEach(item => {
+                    itemsList.innerHTML += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 40px; height: 40px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-box" style="color: var(--bg-dark);"></i>
+                                </div>
+                                <span style="font-weight: 500;">${item.name} <span style="color: var(--text-secondary);">x ${item.qty}</span></span>
+                            </div>
+                            <span style="font-weight: bold; color: var(--accent-gold);">₹${item.price}</span>
+                        </div>
+                    `;
                 });
-                document.getElementById('citems').innerHTML = itemsHtml;
+
+                // Inject Timeline
+                const timeline = document.getElementById('tracking-timeline');
+                timeline.innerHTML = '<div style="position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border-color);"></div>';
+                data.updates.forEach((update, index) => {
+                    timeline.innerHTML += `
+                        <div style="position: relative;" class="animate-fade">
+                            <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: ${index === 0 ? 'var(--accent-gold)' : 'var(--border-color)'}; border-radius: 50%; border: 3px solid var(--bg-dark);"></div>
+                            <div style="font-weight: bold; ${index === 0 ? 'color: var(--accent-gold);' : ''}">${update.text}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">${update.time}</div>
+                        </div>
+                    `;
+                });
+                
+                // Scroll to results
+                window.scrollTo({ top: container.offsetTop - 100, behavior: 'smooth' });
                 
             } else {
-                showToast('No order found with these details.', 'error');
+                showToast('No matching order found. Please check your credentials.', 'error');
             }
         });
     });

@@ -14,17 +14,11 @@
         <!-- Main Content -->
         <div style="flex: 1; min-width: 600px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h1 style="margin: 0;">Manage Orders</h1>
+                <h1 style="margin: 0; font-family: 'Outfit', sans-serif;">Manage Orders</h1>
                 <div style="display: flex; gap: 10px;">
                     <form method="GET" style="display: flex; gap: 10px;">
-                        <input type="text" name="order_search" placeholder="Search Order ID or Customer..." class="form-control" style="width: 250px;">
-                        <select name="status_filter" class="form-control" style="width: 150px;">
-                            <option value="">All Statuses</option>
-                            <option value="Confirmed">Confirmed</option>
-                            <option value="Shipped">Shipped</option>
-                            <option value="Delivered">Delivered</option>
-                        </select>
-                        <button type="submit" class="btn-primary" style="width: auto; padding: 0 20px;"><i class="fas fa-filter"></i></button>
+                        <input type="text" name="order_search" placeholder="Order ID or Customer..." class="form-control" style="width: 250px;" value="{{ request.GET.order_search }}">
+                        <button type="submit" class="btn-primary" style="width: auto; padding: 0 20px;"><i class="fas fa-search"></i> Search</button>
                     </form>
                 </div>
             </div>
@@ -37,11 +31,11 @@
                             <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 0.9rem;">
                                 <th style="padding: 15px 10px;">Order ID</th>
                                 <th style="padding: 15px 10px;">Customer</th>
-                                <th style="padding: 15px 10px;">Products</th>
-                                <th style="padding: 15px 10px;">Total</th>
+                                <th style="padding: 15px 10px;">Items Summary</th>
+                                <th style="padding: 15px 10px;">Your Total</th>
                                 <th style="padding: 15px 10px;">Status</th>
                                 <th style="padding: 15px 10px;">Date</th>
-                                <th style="padding: 15px 10px;">Action</th>
+                                <th style="padding: 15px 10px; text-align: right;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -54,21 +48,26 @@
                                         <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ order_data.order.customer.email }}</div>
                                     </td>
                                     <td style="padding: 15px 10px;">
-                                        {% for item in order_data.items %}
-                                            <div style="font-size: 0.85rem;">{{ item.product.name }} x {{ item.quantity }}</div>
-                                        {% endfor %}
+                                        <div style="font-size: 0.85rem;">
+                                            {{ order_data.items.0.product.name|truncatechars:30 }}
+                                            {% if order_data.items.count > 1 %}
+                                            <span style="color: var(--accent-gold);">+{{ order_data.items.count|add:"-1" }} more</span>
+                                            {% endif %}
+                                        </div>
                                     </td>
                                     <td style="padding: 15px 10px; color: var(--accent-gold); font-weight: bold;">₹{{ order_data.seller_total }}</td>
                                     <td style="padding: 15px 10px;">
-                                        <select class="form-control status-updater" data-order="{{ order_data.order.id }}" style="font-size: 0.75rem; padding: 5px; width: 110px;">
-                                            <option value="Confirmed" {% if order_data.status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
-                                            <option value="Shipped" {% if order_data.status == 'Shipped' %}selected{% endif %}>Shipped</option>
-                                            <option value="Delivered" {% if order_data.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                        <select class="form-control status-updater" data-order="{{ order_data.order.id }}" style="font-size: 0.75rem; padding: 5px; width: 130px; background: rgba(255,255,255,0.05);">
+                                            {% for code, label in order_data.order.STATUS_CHOICES %}
+                                            <option value="{{ code }}" {% if order_data.order.status == code %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
                                         </select>
                                     </td>
                                     <td style="padding: 15px 10px; font-size: 0.85rem;">{{ order_data.order.date_ordered|date:"M d, Y" }}</td>
-                                    <td style="padding: 15px 10px;">
-                                        <a href="/seller_order_details/{{ order_data.order.id }}/" class="btn-primary" style="width: auto; padding: 5px 12px; font-size: 0.8rem; background: var(--bg-dark); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-decoration: none;">View</a>
+                                    <td style="padding: 15px 10px; text-align: right;">
+                                        <a href="/seller_order_details/{{ order_data.order.id }}/" style="color: var(--accent-gold); text-decoration: none; font-size: 0.9rem; font-weight: bold;">
+                                            <i class="fas fa-eye"></i> View Details
+                                        </a>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -88,27 +87,33 @@
     </div>
 </div>
 
+{% block js %}
 <script>
     document.querySelectorAll('.status-updater').forEach(select => {
         select.addEventListener('change', function() {
             const orderId = this.dataset.order;
             const newStatus = this.value;
+            const originalValue = this.querySelector('option[selected]')?.value;
             
             fetch(`/update_order_status/${orderId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': csrftoken
                 },
                 body: JSON.stringify({ status: newStatus })
             })
             .then(response => response.json())
             .then(data => {
                 if(data.status === 'success') {
-                    showToast('Order status updated successfully!');
+                    showToast(`Order #${orderId} status updated to ${newStatus} ✓`);
+                } else {
+                    showToast('Failed to update status', 'error');
+                    this.value = originalValue;
                 }
             });
         });
     });
 </script>
+{% endblock %}
 {% endblock %}

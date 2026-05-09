@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
+        .header { background: #1a1a1a; color: #b8860b; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .success-banner { background: #dcfce7; color: #166534; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
+        .footer { background: #f4f4f4; padding: 20px; text-align: center; font-size: 0.8rem; color: #777; }
+        .btn { display: inline-block; padding: 12px 25px; background: #b8860b; color: white !important; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SHOPVEXAEL SELLER HUB</h1>
+        </div>
+        <div class="content">
+            <div class="success-banner">Verification Approved!</div>
+            <h2>Welcome, {{ seller.company_name }}!</h2>
+            <p>We are excited to inform you that your seller account has been verified and approved by the Shopvexael administration.</p>
+            
+            <p>You can now log in to your Seller Hub to:</p>
+            <ul>
+                <li>Add and manage your product catalog</li>
+                <li>Track real-time sales analytics</li>
+                <li>Manage customer orders and shipments</li>
+                <li>Configure your store settings</li>
+            </ul>
+
+            <a href="{{ request.scheme }}://{{ request.get_host }}/seller_dashboard/" class="btn">Go to Seller Hub</a>
+            
+            <p style="margin-top: 30px;">Let's build something great together!</p>
+        </div>
+        <div class="footer">
+            &copy; 2026 Shopvexael Seller Program. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

@@ -13,48 +13,51 @@
     </div>
 
     <ul style="list-style: none; padding: 0; margin: 0;">
-        <li style="margin-bottom: 10px;">
+        <li style="margin-bottom: 5px;">
             <a href="/seller_dashboard/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
                 {% if '/seller_dashboard' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
-                <i class="fas fa-chart-line"></i> Dashboard
+                <i class="fas fa-chart-line" style="width: 20px;"></i> Dashboard
             </a>
         </li>
-        <li style="margin-bottom: 10px;">
+        <li style="margin-bottom: 5px;">
             <a href="/seller_products/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
                 {% if '/seller_products' in request.path or '/seller_add' in request.path or '/seller_edit' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
-                <i class="fas fa-box"></i> My Products
+                <i class="fas fa-box" style="width: 20px;"></i> My Products
             </a>
         </li>
-        <li style="margin-bottom: 10px;">
+        <li style="margin-bottom: 5px;">
             <a href="/seller_orders/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
                 {% if '/seller_orders' in request.path or '/seller_order_details' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
-                <i class="fas fa-shopping-bag"></i> Orders
+                <i class="fas fa-shopping-bag" style="width: 20px;"></i> Orders
             </a>
         </li>
-        <li style="margin-bottom: 10px;">
+        <li style="margin-bottom: 5px;">
             <a href="/seller_analytics/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
                 {% if '/seller_analytics' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
-                <i class="fas fa-bullseye"></i> Analytics
+                <i class="fas fa-bullseye" style="width: 20px;"></i> Analytics
             </a>
         </li>
-        <li style="margin-bottom: 10px;">
-            <a href="/seller_reviews/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; color: var(--text-primary); text-decoration: none; transition: 0.3s;">
-                <i class="fas fa-star"></i> Reviews
+        <li style="margin-bottom: 5px;">
+            <a href="/seller_inventory/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
+                {% if '/seller_inventory' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
+                <i class="fas fa-warehouse" style="width: 20px;"></i> Inventory
             </a>
         </li>
-        <li style="margin-bottom: 10px;">
-            <a href="/seller_inventory/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; color: var(--text-primary); text-decoration: none; transition: 0.3s;">
-                <i class="fas fa-warehouse"></i> Inventory
+        <li style="margin-bottom: 5px;">
+            <a href="/seller_reviews/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
+                {% if '/seller_reviews' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
+                <i class="fas fa-star" style="width: 20px;"></i> Reviews
             </a>
         </li>
-        <li style="margin-bottom: 10px;">
-            <a href="/settings/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; color: var(--text-primary); text-decoration: none; transition: 0.3s;">
-                <i class="fas fa-cog"></i> Settings
+        <li style="margin-bottom: 5px;">
+            <a href="/seller_settings/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 8px; text-decoration: none; transition: 0.3s;
+                {% if '/seller_settings' in request.path %} background: rgba(184, 134, 11, 0.1); color: var(--accent-gold); font-weight: bold; {% else %} color: var(--text-primary); {% endif %}">
+                <i class="fas fa-cog" style="width: 20px;"></i> Settings
             </a>
         </li>
-        <li style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-            <a href="/profile/" style="display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--text-secondary); text-decoration: none; border-radius: 8px;">
-                <i class="fas fa-user-circle"></i> Back to Profile
+        <li style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <a href="/seller_restore_products/" style="display: flex; align-items: center; gap: 12px; padding: 10px 15px; color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;">
+                <i class="fas fa-trash-restore"></i> Restore Deleted
             </a>
         </li>
     </ul>

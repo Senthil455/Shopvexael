@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
+        .header { background: #1a1a1a; color: #b8860b; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .status-box { background: #f9f9f9; padding: 20px; border-radius: 8px; border-left: 4px solid #b8860b; margin: 20px 0; }
+        .footer { background: #f4f4f4; padding: 20px; text-align: center; font-size: 0.8rem; color: #777; }
+        .btn { display: inline-block; padding: 12px 25px; background: #b8860b; color: white !important; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SHOPVEXAEL</h1>
+        </div>
+        <div class="content">
+            <h2>Hello {{ order.customer.name }},</h2>
+            <p>We're writing to let you know that your order <strong>#{{ order.id }}</strong> has a new update.</p>
+            
+            <div class="status-box">
+                <strong>Current Status:</strong> {{ order.get_status_display }}
+            </div>
+
+            {% if order.tracking_number %}
+            <p><strong>Tracking Number:</strong> {{ order.tracking_number }}</p>
+            {% endif %}
+
+            <p>You can track your package in real-time by clicking the button below:</p>
+            
+            <a href="{{ request.scheme }}://{{ request.get_host }}/tracker/?order_id={{ order.id }}&email={{ order.customer.email }}" class="btn">Track My Order</a>
+            
+            <p style="margin-top: 30px;">Thank you for shopping with us!</p>
+        </div>
+        <div class="footer">
+            &copy; 2026 Shopvexael Marketplace. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

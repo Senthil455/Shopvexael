@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | Store Settings{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+        
+        <!-- Sidebar Navigation -->
+        <div style="flex: 0 0 280px;">
+            {% include 'seller_sidebar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div style="flex: 1; min-width: 600px;">
+            <h1 style="margin: 0 0 30px; font-family: 'Outfit', sans-serif;">Store Settings</h1>
+
+            <div style="display: flex; flex-direction: column; gap: 30px;">
+                <!-- Profile Settings -->
+                <div class="product-card" style="padding: 30px;">
+                    <h3 style="margin-top: 0; margin-bottom: 25px;"><i class="fas fa-store" style="color: var(--accent-gold);"></i> Store Profile</h3>
+                    <form method="POST" action="/seller_settings/" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label>Company Name</label>
+                                <input type="text" name="company_name" class="form-control" value="{{ seller.company_name }}">
+                            </div>
+                            <div class="form-group">
+                                <label>GST Number / Tax ID</label>
+                                <input type="text" name="gst_number" class="form-control" value="{{ seller.gst_number }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Store Description</label>
+                            <textarea name="description" class="form-control" rows="4">{{ seller.description }}</textarea>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label>Contact Email</label>
+                                <input type="email" name="email" class="form-control" value="{{ seller.user.email }}">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="text" name="phone" class="form-control" value="{{ seller.phone_number }}">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: auto; padding: 12px 30px;">Save Store Profile</button>
+                    </form>
+                </div>
+
+                <!-- Payout Settings -->
+                <div class="product-card" style="padding: 30px;">
+                    <h3 style="margin-top: 0; margin-bottom: 25px;"><i class="fas fa-university" style="color: #3b82f6;"></i> Payout & Banking</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label>Account Holder Name</label>
+                            <input type="text" class="form-control" placeholder="Full legal name">
+                        </div>
+                        <div class="form-group">
+                            <label>Account Number</label>
+                            <input type="password" class="form-control" placeholder="••••••••••••">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label>IFSC Code</label>
+                            <input type="text" class="form-control" placeholder="ABCD0123456">
+                        </div>
+                        <div class="form-group">
+                            <label>Bank Name</label>
+                            <input type="text" class="form-control" placeholder="e.g. HDFC Bank">
+                        </div>
+                    </div>
+                    <div style="padding: 15px; background: rgba(59, 130, 246, 0.05); border-radius: 8px; border: 1px dashed rgba(59, 130, 246, 0.2); margin-bottom: 20px; font-size: 0.9rem; color: #3b82f6;">
+                        <i class="fas fa-info-circle"></i> Payouts are processed every Friday for delivered orders.
+                    </div>
+                    <button class="btn-primary" style="width: auto; padding: 12px 30px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary);">Update Bank Details</button>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="product-card" style="padding: 30px; border: 1px solid #ef444420; border-top: 4px solid #ef4444;">
+                    <h3 style="margin-top: 0; margin-bottom: 10px; color: #ef4444;">Danger Zone</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">Once you deactivate your seller account, you will no longer be able to manage your products or receive orders.</p>
+                    <button class="btn-primary" style="width: auto; padding: 10px 20px; background: #ef444420; border: 1px solid #ef444440; color: #ef4444;">Deactivate Store</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

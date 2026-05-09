@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | Restore Deleted Products{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+        
+        <!-- Sidebar Navigation -->
+        <div style="flex: 0 0 280px;">
+            {% include 'seller_sidebar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div style="flex: 1; min-width: 600px;">
+            <div style="margin-bottom: 30px;">
+                <h1 style="margin: 0; font-family: 'Outfit', sans-serif;">Trash Bin</h1>
+                <p style="color: var(--text-secondary); margin-top: 5px;">Products deleted within the last 30 days can be restored here.</p>
+            </div>
+
+            <!-- Deleted Products Table -->
+            <div class="product-card" style="padding: 25px;">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 0.9rem;">
+                                <th style="padding: 15px 10px;">Product</th>
+                                <th style="padding: 15px 10px;">Category</th>
+                                <th style="padding: 15px 10px;">Last Price</th>
+                                <th style="padding: 15px 10px;">Deleted On</th>
+                                <th style="padding: 15px 10px; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in deleted_products %}
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 15px 10px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; opacity: 0.7;">
+                                        <img src="{{ product.image.url }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; background: white; filter: grayscale(1);">
+                                        <div>
+                                            <div style="font-weight: 500;">{{ product.name }}</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-secondary);">SKU: {{ product.sku|default:"N/A" }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 10px;">{{ product.category }}</td>
+                                <td style="padding: 15px 10px;">₹{{ product.price }}</td>
+                                <td style="padding: 15px 10px; color: var(--text-secondary);">{{ product.pub_date|date:"M d, Y" }}</td>
+                                <td style="padding: 15px 10px; text-align: right;">
+                                    <form method="POST" action="/seller_restore_action/{{ product.id }}/" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-primary" style="width: auto; padding: 6px 15px; font-size: 0.8rem;"><i class="fas fa-undo"></i> Restore</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" style="padding: 60px; text-align: center; color: var(--text-secondary);">
+                                    <i class="fas fa-trash-alt" style="font-size: 3rem; margin-bottom: 20px; display: block;"></i>
+                                    Your trash bin is empty.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 20px; background: rgba(184, 134, 11, 0.05); border-radius: 10px; border: 1px dashed rgba(184, 134, 11, 0.2); font-size: 0.85rem; color: var(--text-secondary);">
+                <i class="fas fa-info-circle"></i> Restoring a product will make it live again on the marketplace immediately. If the product was part of active orders before deletion, those orders will link back to it.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

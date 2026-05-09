@@ -14,7 +14,7 @@
         <!-- Main Dashboard Content -->
         <div style="flex: 1; min-width: 600px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h1 style="margin: 0;">Overview</h1>
+                <h1 style="margin: 0; font-family: 'Outfit', sans-serif;">Dashboard Overview</h1>
                 <a href="/seller_add_product/" class="btn-primary" style="width: auto; padding: 12px 25px;"><i class="fas fa-plus"></i> Add New Product</a>
             </div>
 
@@ -25,11 +25,11 @@
                     <div style="font-size: 2rem; font-weight: bold; color: var(--accent-gold);">₹{{ total_sales|default:"0" }}</div>
                 </div>
                 <div class="product-card" style="padding: 25px; text-align: center;">
-                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">Orders</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">Total Orders</div>
                     <div style="font-size: 2rem; font-weight: bold;">{{ total_orders|default:"0" }}</div>
                 </div>
                 <div class="product-card" style="padding: 25px; text-align: center;">
-                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">Products</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">Active Products</div>
                     <div style="font-size: 2rem; font-weight: bold;">{{ total_products|default:"0" }}</div>
                 </div>
                 <div class="product-card" style="padding: 25px; text-align: center;">
@@ -38,68 +38,57 @@
                 </div>
             </div>
 
-            <!-- Low Stock Alerts -->
+            <!-- Inventory Alerts -->
+            {% if low_stock_products %}
             <div class="product-card" style="padding: 25px; margin-bottom: 40px; border-left: 5px solid #ef4444;">
                 <h3 style="margin-top: 0; margin-bottom: 15px;"><i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Inventory Alerts</h3>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
-                    {% for product in seller_products %}
-                        {% if product.stock < 10 %}
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(239, 68, 68, 0.05); border-radius: 5px;">
-                            <span>{{ product.name }}</span>
-                            <span style="color: {{ product.stock_status.color }}; font-weight: bold;">{{ product.stock_status.label }} ({{ product.stock }})</span>
+                    {% for product in low_stock_products %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(239, 68, 68, 0.05); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.1);">
+                            <span style="font-weight: 500;">{{ product.name }}</span>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: {{ product.stock_status.color }}; font-weight: bold;">{{ product.stock_status.label }} ({{ product.stock }})</span>
+                                <a href="/seller_edit_product/{{product.id}}/" style="color: var(--text-primary);"><i class="fas fa-edit"></i></a>
+                            </div>
                         </div>
-                        {% endif %}
-                    {% empty %}
-                        <p style="color: var(--text-secondary); font-size: 0.9rem;">All inventory levels are healthy.</p>
                     {% endfor %}
                 </div>
             </div>
+            {% endif %}
 
-            <!-- Charts Section (Mockup with CSS) -->
+            <!-- Analytics Section -->
             <div style="display: flex; gap: 30px; margin-bottom: 40px; flex-wrap: wrap;">
                 <div class="product-card" style="flex: 2; min-width: 400px; padding: 25px;">
-                    <h3 style="margin-top: 0; margin-bottom: 25px;">Sales Revenue (Last 30 Days)</h3>
-                    <div style="height: 250px; background: rgba(184, 134, 11, 0.05); border-radius: 10px; display: flex; align-items: flex-end; gap: 10px; padding: 20px; border: 1px dashed var(--border-color);">
-                        <!-- Simple CSS Bar Mockup -->
-                        <div style="flex: 1; height: 30%; background: var(--accent-gold); border-radius: 4px 4px 0 0;"></div>
-                        <div style="flex: 1; height: 50%; background: var(--accent-gold); border-radius: 4px 4px 0 0;"></div>
-                        <div style="flex: 1; height: 40%; background: var(--accent-gold); border-radius: 4px 4px 0 0;"></div>
-                        <div style="flex: 1; height: 70%; background: var(--accent-gold); border-radius: 4px 4px 0 0;"></div>
-                        <div style="flex: 1; height: 90%; background: var(--accent-gold); border-radius: 4px 4px 0 0;"></div>
-                        <div style="flex: 1; height: 60%; background: var(--accent-gold); border-radius: 4px 4px 0 0;"></div>
-                        <div style="flex: 1; height: 80%; background: var(--accent-gold); border-radius: 4px 4px 0 0;"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h3 style="margin: 0;">Sales Performance</h3>
+                        <select id="chart-days" style="background: var(--bg-dark); color: white; border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 4px;">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                        </select>
+                    </div>
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="salesChart"></canvas>
                     </div>
                 </div>
                 <div class="product-card" style="flex: 1; min-width: 300px; padding: 25px;">
-                    <h3 style="margin-top: 0; margin-bottom: 25px;">Order Status</h3>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
-                                <span>Delivered</span>
-                                <span>75%</span>
-                            </div>
-                            <div style="height: 8px; background: var(--bg-dark); border-radius: 4px; overflow: hidden;">
-                                <div style="width: 75%; height: 100%; background: #10b981;"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
-                                <span>Pending</span>
-                                <span>15%</span>
-                            </div>
-                            <div style="height: 8px; background: var(--bg-dark); border-radius: 4px; overflow: hidden;">
-                                <div style="width: 15%; height: 100%; background: var(--accent-gold);"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
-                                <span>Cancelled</span>
-                                <span>10%</span>
-                            </div>
-                            <div style="height: 8px; background: var(--bg-dark); border-radius: 4px; overflow: hidden;">
-                                <div style="width: 10%; height: 100%; background: #ef4444;"></div>
-                            </div>
-                        </div>
+                    <h3 style="margin-top: 0; margin-bottom: 25px;">Quick Actions</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <a href="/seller_add_product/" style="padding: 20px; background: rgba(184, 134, 11, 0.1); border-radius: 10px; text-decoration: none; text-align: center; color: var(--accent-gold); border: 1px solid rgba(184, 134, 11, 0.2);">
+                            <i class="fas fa-plus-circle" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+                            <span style="font-size: 0.8rem; font-weight: bold;">Add Product</span>
+                        </a>
+                        <a href="/seller_orders/" style="padding: 20px; background: rgba(59, 130, 246, 0.1); border-radius: 10px; text-decoration: none; text-align: center; color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">
+                            <i class="fas fa-shipping-fast" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+                            <span style="font-size: 0.8rem; font-weight: bold;">View Orders</span>
+                        </a>
+                        <a href="/seller_inventory/" style="padding: 20px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; text-decoration: none; text-align: center; color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">
+                            <i class="fas fa-warehouse" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+                            <span style="font-size: 0.8rem; font-weight: bold;">Inventory</span>
+                        </a>
+                        <a href="/seller_reviews/" style="padding: 20px; background: rgba(245, 158, 11, 0.1); border-radius: 10px; text-decoration: none; text-align: center; color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">
+                            <i class="fas fa-star" style="font-size: 1.5rem; margin-bottom: 10px; display: block;"></i>
+                            <span style="font-size: 0.8rem; font-weight: bold;">Reviews</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -128,7 +117,7 @@
                                     <td style="padding: 15px 10px; color: var(--accent-gold); font-weight: bold;">₹{{ order.get_cart_total }}</td>
                                     <td style="padding: 15px 10px; font-size: 0.9rem;">{{ order.date_ordered|date:"M d, Y" }}</td>
                                     <td style="padding: 15px 10px;">
-                                        <span style="padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; background: rgba(16, 185, 129, 0.1); color: #10b981;">Delivered</span>
+                                        <span class="status-badge {{ order.status|lower }}">{{ order.status }}</span>
                                     </td>
                                     <td style="padding: 15px 10px;">
                                         <a href="/seller_order_details/{{ order.id }}/" style="color: var(--accent-gold); text-decoration: none; font-size: 0.9rem;"><i class="fas fa-eye"></i> View</a>
@@ -150,4 +139,63 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let salesChart;
+    
+    function initChart(days=7) {
+        fetch(`/seller_analytics_data/?days=${days}`)
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            if(salesChart) salesChart.destroy();
+            
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: data.revenue,
+                        borderColor: '#facc15',
+                        backgroundColor: 'rgba(250, 204, 21, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#facc15',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#aaaaaa' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#aaaaaa' }
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    document.getElementById('chart-days').addEventListener('change', function() {
+        initChart(this.value);
+    });
+
+    initChart(7);
+</script>
 {% endblock %}

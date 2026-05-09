@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Shopvexael | Inventory Management{% endblock %}
+
+{% block body %}
+<div style="padding: 40px 20px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+        
+        <!-- Sidebar Navigation -->
+        <div style="flex: 0 0 280px;">
+            {% include 'seller_sidebar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div style="flex: 1; min-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1 style="margin: 0; font-family: 'Outfit', sans-serif;">Inventory Management</h1>
+                <div style="display: flex; gap: 15px;">
+                    <button onclick="location.reload()" class="btn-primary" style="width: auto; padding: 10px 20px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <a href="/seller_add_product/" class="btn-primary" style="width: auto; padding: 10px 25px;"><i class="fas fa-plus"></i> Add Stock</a>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                <div class="product-card" style="padding: 15px; text-align: center; border-bottom: 3px solid #10b981;">
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Healthy Stock</div>
+                    <div style="font-size: 1.5rem; font-weight: bold;">{{ healthy_count }}</div>
+                </div>
+                <div class="product-card" style="padding: 15px; text-align: center; border-bottom: 3px solid #f59e0b;">
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Low Stock</div>
+                    <div style="font-size: 1.5rem; font-weight: bold;">{{ low_stock_count }}</div>
+                </div>
+                <div class="product-card" style="padding: 15px; text-align: center; border-bottom: 3px solid #ef4444;">
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Out of Stock</div>
+                    <div style="font-size: 1.5rem; font-weight: bold;">{{ out_of_stock_count }}</div>
+                </div>
+            </div>
+
+            <!-- Inventory Table -->
+            <div class="product-card" style="padding: 25px;">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 0.9rem;">
+                                <th style="padding: 15px 10px;">Product</th>
+                                <th style="padding: 15px 10px;">SKU</th>
+                                <th style="padding: 15px 10px;">Current Stock</th>
+                                <th style="padding: 15px 10px;">Stock Status</th>
+                                <th style="padding: 15px 10px;">Quick Edit</th>
+                                <th style="padding: 15px 10px; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 15px 10px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <img src="{{ product.image.url }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; background: white;">
+                                        <div style="font-weight: 500;">{{ product.name|truncatechars:40 }}</div>
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 10px; font-family: monospace; font-size: 0.85rem;">{{ product.sku|default:"N/A" }}</td>
+                                <td style="padding: 15px 10px;">
+                                    <span id="stock-val-{{product.id}}" style="font-weight: bold; font-size: 1.1rem;">{{ product.stock }}</span>
+                                </td>
+                                <td style="padding: 15px 10px;">
+                                    <span id="stock-badge-{{product.id}}" class="status-badge" style="background: {{ product.stock_status.color }}20; color: {{ product.stock_status.color }}; border: 1px solid {{ product.stock_status.color }}30;">
+                                        {{ product.stock_status.label }}
+                                    </span>
+                                </td>
+                                <td style="padding: 15px 10px;">
+                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                        <button onclick="updateStock({{product.id}}, -1)" class="btn-primary" style="width: 30px; height: 30px; padding: 0; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary);"><i class="fas fa-minus"></i></button>
+                                        <input type="number" id="stock-input-{{product.id}}" value="0" style="width: 50px; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; text-align: center; border-radius: 4px; padding: 4px;">
+                                        <button onclick="updateStock({{product.id}}, 1)" class="btn-primary" style="width: 30px; height: 30px; padding: 0; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-primary);"><i class="fas fa-plus"></i></button>
+                                        <button onclick="saveStock({{product.id}})" class="btn-primary" style="width: auto; padding: 6px 10px; font-size: 0.7rem; margin-left: 5px;"><i class="fas fa-save"></i></button>
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 10px; text-align: right;">
+                                    <a href="/seller_edit_product/{{ product.id }}/" style="color: var(--text-secondary); text-decoration: none;"><i class="fas fa-edit"></i> Full Edit</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                                    No products found in your inventory.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block js %}
+<script>
+    function updateStock(id, delta) {
+        const input = document.getElementById(`stock-input-${id}`);
+        input.value = parseInt(input.value) + delta;
+    }
+
+    function saveStock(id) {
+        const input = document.getElementById(`stock-input-${id}`);
+        const delta = parseInt(input.value);
+        if(delta === 0) return;
+
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+
+        fetch(`/update_stock/${id}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ 'delta': delta })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                showToast(`Stock updated for product #${id} ✓`);
+                document.getElementById(`stock-val-${id}`).innerText = data.new_stock;
+                const badge = document.getElementById(`stock-badge-${id}`);
+                badge.innerText = data.stock_status.label;
+                badge.style.background = data.stock_status.color + '20';
+                badge.style.color = data.stock_status.color;
+                badge.style.borderColor = data.stock_status.color + '30';
+                input.value = 0;
+            } else {
+                showToast(data.message || 'Error updating stock', 'error');
+            }
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %}

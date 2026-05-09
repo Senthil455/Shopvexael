@@ -3,60 +3,96 @@
 {% block title %}Shopvexael | Order Details #{{ order.id }}{% endblock %}
 
 {% block body %}
-<div style="padding: 40px 20px; max-width: 1000px; margin: 0 auto;">
+<div style="padding: 40px 20px; max-width: 1200px; margin: 0 auto;">
     <div style="margin-bottom: 30px;">
         <a href="/seller_orders/" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;"><i class="fas fa-arrow-left"></i> Back to Orders</a>
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px;">
-            <h1 style="margin: 0;">Order Details #{{ order.id }}</h1>
-            <div style="text-align: right;">
-                <button onclick="window.print()" class="btn-primary" style="width: auto; padding: 10px 20px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);"><i class="fas fa-print"></i> Print Invoice</button>
+            <div>
+                <h1 style="margin: 0; font-family: 'Outfit', sans-serif;">Order #{{ order.id }}</h1>
+                <p style="color: var(--text-secondary); margin: 5px 0 0;">Placed on {{ order.date_ordered|date:"M d, Y at H:i" }}</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="window.print()" class="btn-primary" style="width: auto; padding: 12px 20px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);"><i class="fas fa-print"></i> Print Invoice</button>
             </div>
         </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
         <div>
-            <!-- Items Card -->
-            <div class="product-card" style="padding: 25px; margin-bottom: 30px;">
-                <h3 style="margin-top: 0; margin-bottom: 20px;">Ordered Items</h3>
-                {% for item in items %}
-                <div style="display: flex; gap: 20px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color);">
-                    <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}https://picsum.photos/seed/{{item.product.id}}/100/100{% endif %}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                    <div style="flex: 1;">
-                        <h4 style="margin: 0 0 5px;">{{ item.product.name }}</h4>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">SKU: {{ item.product.sku }}</div>
-                        <div style="margin-top: 5px; font-weight: bold;">₹{{ item.product.final_price }} x {{ item.quantity }}</div>
+            <!-- Status Update Card -->
+            <div class="product-card" style="padding: 25px; margin-bottom: 30px; border-top: 4px solid var(--accent-gold);">
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Management & Status</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label>Order Status</label>
+                        <select id="order-status-select" class="form-control">
+                            {% for code, label in order.STATUS_CHOICES %}
+                            <option value="{{ code }}" {% if order.status == code %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div style="text-align: right; font-weight: bold; color: var(--accent-gold);">
-                        ₹{{ item.get_total }}
+                    <div class="form-group">
+                        <label>Tracking ID</label>
+                        <input type="text" id="tracking-id-input" class="form-control" placeholder="Enter Tracking #" value="{{ order.tracking_number|default:'' }}">
                     </div>
                 </div>
-                {% endfor %}
-                <div style="text-align: right; font-size: 1.2rem;">
+                <div class="form-group">
+                    <label>Internal Seller Notes</label>
+                    <textarea id="seller-notes-input" class="form-control" rows="2" placeholder="Private notes about this order...">{{ order.seller_notes|default:'' }}</textarea>
+                </div>
+                <button id="update-order-btn" class="btn-primary" style="margin-top: 10px;"><i class="fas fa-sync-alt"></i> Update Order Information</button>
+            </div>
+
+            <!-- Items Card -->
+            <div class="product-card" style="padding: 25px; margin-bottom: 30px;">
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Items from Your Store</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.85rem;">
+                            <th style="padding: 10px;">Product</th>
+                            <th style="padding: 10px;">Price</th>
+                            <th style="padding: 10px;">Qty</th>
+                            <th style="padding: 10px; text-align: right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 15px 10px;">
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <img src="{{ item.product.image.url }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background: white;">
+                                    <div>
+                                        <div style="font-weight: 500;">{{ item.product.name }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary);">SKU: {{ item.product.sku }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 15px 10px;">₹{{ item.product.final_price }}</td>
+                            <td style="padding: 15px 10px;">x{{ item.quantity }}</td>
+                            <td style="padding: 15px 10px; text-align: right; font-weight: bold; color: var(--accent-gold);">₹{{ item.get_total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div style="text-align: right; margin-top: 20px; font-size: 1.2rem;">
                     <span style="color: var(--text-secondary);">Seller Subtotal:</span>
                     <span style="font-weight: bold; color: var(--accent-gold); margin-left: 15px;">₹{{ seller_total }}</span>
                 </div>
             </div>
 
-            <!-- Tracking Card -->
+            <!-- Timeline -->
             <div class="product-card" style="padding: 25px;">
-                <h3 style="margin-top: 0; margin-bottom: 25px;">Order Tracking Timeline</h3>
+                <h3 style="margin-top: 0; margin-bottom: 25px;">Order Logs</h3>
                 <div style="position: relative; padding-left: 30px;">
                     <div style="position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border-color);"></div>
                     
                     {% for update in tracking_history %}
-                    <div style="position: relative; margin-bottom: 30px;">
+                    <div style="position: relative; margin-bottom: 20px;" class="animate-fade">
                         <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: var(--accent-gold); border-radius: 50%; border: 3px solid var(--bg-dark);"></div>
-                        <div style="font-weight: bold;">{{ update.desc }}</div>
+                        <div style="font-weight: 500;">{{ update.desc }}</div>
                         <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ update.datetime|date:"M d, Y - H:i" }}</div>
                     </div>
                     {% endfor %}
-                    
-                    <div style="position: relative;">
-                        <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: var(--border-color); border-radius: 50%; border: 3px solid var(--bg-dark);"></div>
-                        <div style="font-weight: bold; color: var(--text-secondary);">Order Placed</div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ order.date_ordered|date:"M d, Y - H:i" }}</div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -64,40 +100,92 @@
         <div>
             <!-- Customer Card -->
             <div class="product-card" style="padding: 25px; margin-bottom: 30px;">
-                <h3 style="margin-top: 0; margin-bottom: 20px;">Customer Info</h3>
-                <div style="margin-bottom: 15px;">
-                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Name</div>
-                    <div style="font-weight: bold;">{{ order.customer.name }}</div>
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Customer Details</h3>
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                    <div style="width: 50px; height: 50px; background: var(--bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--accent-gold);">
+                        {{ order.customer.name|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <div style="font-weight: bold;">{{ order.customer.name }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Customer ID: #{{ order.customer.id }}</div>
+                    </div>
                 </div>
                 <div style="margin-bottom: 15px;">
-                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Email</div>
-                    <div>{{ order.customer.email }}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Contact Email</div>
+                    <div style="word-break: break-all;">{{ order.customer.email }}</div>
                 </div>
                 <div style="margin-bottom: 15px;">
-                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Phone</div>
-                    <div>{{ order.customer.phone_number|default:"N/A" }}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Phone Number</div>
+                    <div>{{ order.customer.phone_number|default:"Not Provided" }}</div>
                 </div>
             </div>
 
             <!-- Shipping Card -->
             <div class="product-card" style="padding: 25px;">
-                <h3 style="margin-top: 0; margin-bottom: 20px;">Shipping Address</h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Delivery Address</h3>
                 {% if shipping %}
-                <div style="line-height: 1.6;">
+                <div style="line-height: 1.8;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">{{ order.customer.name }}</div>
                     {{ shipping.address }}<br>
                     {{ shipping.city }}, {{ shipping.state }}<br>
-                    {{ shipping.zipcode }}
+                    <span style="font-weight: bold;">{{ shipping.zipcode }}</span>
+                </div>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                    <div style="color: var(--text-secondary); font-size: 0.8rem;">Payment Method</div>
+                    <div style="font-weight: bold; color: var(--accent-gold);">{{ shipping.payment|upper }}</div>
                 </div>
                 {% else %}
-                <div style="color: var(--text-secondary);">Digital Product / No address needed</div>
+                <div style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                    <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                    Digital Order / Store Pickup
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 
+{% block js %}
+<script>
+    document.getElementById('update-order-btn').addEventListener('click', function() {
+        const status = document.getElementById('order-status-select').value;
+        const tracking = document.getElementById('tracking-id-input').value;
+        const notes = document.getElementById('seller-notes-input').value;
+        const btn = this;
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        btn.disabled = true;
+
+        fetch('/update_order_status/{{ order.id }}/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                'status': status,
+                'tracking_number': tracking,
+                'seller_notes': notes
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                showToast('Order Updated Successfully ✓');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('Error updating order', 'error');
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i> Update Order Information';
+                btn.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}
+
 <style media="print">
-    nav, .sub-nav, footer, .btn-primary, i { display: none !important; }
-    .product-card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    nav, .sub-nav, #update-order-btn, .form-group, #chart-days, .btn-primary, i { display: none !important; }
+    .product-card { border: 1px solid #ccc !important; box-shadow: none !important; color: black !important; background: white !important; }
+    body { background: white !important; color: black !important; }
 </style>
 {% endblock %}
