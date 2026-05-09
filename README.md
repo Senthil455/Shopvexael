@@ -1,5 +1,7 @@
 # Shopvexael — Premium Multi-Vendor Marketplace
 
+![Shopvexael Banner](shopvexael_portfolio_banner_1778335457220.png)
+
 Shopvexael is a professional, high-performance eCommerce platform built with Django. It features a modern, glassmorphic dark-mode interface and a robust multi-vendor architecture, providing a seamless experience for customers, sellers, and administrators.
 
 ![Banner](https://img.shields.io/badge/Shopvexael-Production--Ready-gold?style=for-the-badge)
