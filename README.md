@@ -83,5 +83,3 @@ If you are testing the local development environment:
 - **Username**: `admin`
 - **Password**: `adminpassword`
 
----
-Developed with ❤️ by [Antigravity](https://github.com/Antigravity-AI) for **Shopvexael Enterprise**.
