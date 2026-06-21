@@ -5,6 +5,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Shopvexael - Premium Multi-Vendor Marketplace for electronics, fashion, and more">
+    <meta name="keywords" content="ecommerce, marketplace, online shopping, multi-vendor">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -40,7 +44,7 @@
                 <a href="/wishlist/"><i class="far fa-heart"></i> <span>Wishlist</span></a>
                 <a href="/cart/" class="cart-icon-container">
                     <i class="fas fa-shopping-cart"></i>
-                    <span id="cart-total" class="cart-badge">{% if cartItems %}{{cartItems}}{% else %}0%{% endif %}</span>
+                    <span id="cart-total" class="cart-badge">{% if cartItems %}{{cartItems}}{% else %}0{% endif %}</span>
                     <span>Cart</span>
                 </a>
                 <a href="/logout/"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
@@ -85,249 +89,11 @@
         </div>
     </div>
 
-    <script>
-        var user = '{{request.user}}';
-
-        function getToken(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        var csrftoken = getToken('csrftoken');
-
-        function getCookie(name) {
-            var cookieArr = document.cookie.split(";");
-            for (var i = 0; i < cookieArr.length; i++) {
-                var cookiePair = cookieArr[i].split("=");
-                if (name == cookiePair[0].trim()) {
-                    return decodeURIComponent(cookiePair[1]);
-                }
-            }
-            return null;
-        }
-        
-        var cart = JSON.parse(getCookie('cart'))
-        if (cart == undefined) {
-            cart = {}
-            document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"
-        }
-
-        // Toast Notification System
-        function showToast(message, type='success') {
-            const toast = document.createElement('div');
-            toast.style.position = 'fixed';
-            toast.style.bottom = '20px';
-            toast.style.right = '20px';
-            toast.style.padding = '15px 25px';
-            toast.style.borderRadius = '5px';
-            toast.style.color = 'white';
-            toast.style.fontWeight = 'bold';
-            toast.style.zIndex = '9999';
-            toast.style.transition = 'opacity 0.5s ease-in-out';
-            toast.innerHTML = message;
-            
-            if(type === 'success') toast.style.backgroundColor = '#10b981';
-            else if(type === 'error') toast.style.backgroundColor = '#ef4444';
-            else toast.style.backgroundColor = 'var(--accent-gold)';
-
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
-        }
-
-        // Add to cart AJAX
-        var updateBtns = document.querySelectorAll('.update-cart');
-        for (var i = 0; i < updateBtns.length; i++) {
-            updateBtns[i].addEventListener('click', function (e) {
-                var productID = this.dataset.product;
-                var action = this.dataset.action;
-                var btn = this;
-                
-                // If it's a dedicated add button in grid or product page
-                if(btn.tagName === 'BUTTON' && action === 'add') {
-                    btn.innerHTML = 'Adding...';
-                    btn.disabled = true;
-                }
-
-                if (user == 'AnonymousUser') {
-                    addCookieItem(productID, action, btn);
-                } else {
-                    updateUserOrder(productID, action, btn);
-                }
-            })
-        }
-
-        function addCookieItem(productID, action, btn) {
-            if (action == 'add') {
-                if (cart[productID] == undefined) {
-                    cart[productID] = { 'quantity': 1 }
-                } else {
-                    cart[productID]['quantity'] += 1
-                }
-                showToast('Added to Cart ✓');
-                if(btn && btn.tagName === 'BUTTON') {
-                    btn.innerHTML = 'Added ✓';
-                    setTimeout(() => { btn.innerHTML = 'Add To Cart'; btn.disabled = false; }, 2000);
-                }
-            }
-            if (action == 'remove') {
-                cart[productID]['quantity'] -= 1
-                if (cart[productID]['quantity'] <= 0) {
-                    delete cart[productID];
-                }
-            }
-            document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
-            
-            // Only reload if we're on the cart page
-            if(window.location.pathname === '/cart/') location.reload();
-            else {
-                // Manually update cart counter
-                let total = Object.values(cart).reduce((a, b) => a + b.quantity, 0);
-                document.getElementById('cart-total').innerText = total;
-            }
-        }
-
-        function updateUserOrder(productID, action, btn) {
-            var url = '/update_item/'
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                },
-                body: JSON.stringify({ 'productID': productID, 'action': action })
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                if(action === 'add') {
-                    showToast('Added to Cart ✓');
-                    if(btn && btn.tagName === 'BUTTON') {
-                        btn.innerHTML = 'Added ✓';
-                        setTimeout(() => { btn.innerHTML = 'Add To Cart'; btn.disabled = false; }, 2000);
-                    }
-                }
-                if(window.location.pathname === '/cart/' || window.location.pathname === '/checkout/') {
-                    location.reload();
-                } else {
-                    if(data.cartItems !== undefined) {
-                        document.getElementById('cart-total').innerText = data.cartItems;
-                    }
-                }
-            })
-        }
-
-        // Wishlist AJAX
-        var wishlistForms = document.querySelectorAll('.wishlist-form');
-        for (var i = 0; i < wishlistForms.length; i++) {
-            wishlistForms[i].addEventListener('submit', function (e) {
-                e.preventDefault();
-                var url = this.action;
-                var btn = this.querySelector('button');
-                var icon = btn.querySelector('i');
-                
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrftoken,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.status === 'unauthenticated') {
-                        window.location.href = '/login/';
-                    } else if(data.status === 'added') {
-                        showToast('Added to Wishlist ✓', 'success');
-                        if(icon) {
-                            icon.classList.remove('far');
-                            icon.classList.add('fas');
-                            icon.style.color = 'var(--accent-red)';
-                        }
-                    } else if(data.status === 'removed') {
-                        showToast('Removed from Wishlist', 'info');
-                        if(icon) {
-                            icon.classList.remove('fas');
-                            icon.classList.add('far');
-                            icon.style.color = '';
-                        }
-                    }
-                });
-            });
-        }
-        // Search AJAX
-        const searchInput = document.getElementById('search-input');
-        const suggestionsBox = document.getElementById('search-suggestions');
-        let searchTimeout;
-
-        if(searchInput) {
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                const query = this.value.trim();
-                
-                if(query.length < 2) {
-                    suggestionsBox.style.display = 'none';
-                    return;
-                }
-
-                searchTimeout = setTimeout(() => {
-                    fetch(`/ajax_search/?q=${query}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if(data.length > 0) {
-                            suggestionsBox.innerHTML = '';
-                            data.forEach(item => {
-                                const div = document.createElement('div');
-                                div.style.padding = '12px 15px';
-                                div.style.cursor = 'pointer';
-                                div.style.display = 'flex';
-                                div.style.alignItems = 'center';
-                                div.style.gap = '15px';
-                                div.style.borderBottom = '1px solid var(--border-color)';
-                                div.className = 'suggestion-item';
-                                const img = document.createElement('img');
-                                img.src = item.image || '';
-                                img.style.cssText = 'width: 40px; height: 40px; object-fit: cover; border-radius: 4px; background: white;';
-                                const nameDiv = document.createElement('div');
-                                nameDiv.style.cssText = 'font-weight: bold; font-size: 0.9rem;';
-                                nameDiv.textContent = item.name;
-                                const priceDiv = document.createElement('div');
-                                priceDiv.style.cssText = 'color: var(--accent-gold); font-size: 0.8rem;';
-                                priceDiv.textContent = '₹' + item.price;
-                                const textDiv = document.createElement('div');
-                                textDiv.appendChild(nameDiv);
-                                textDiv.appendChild(priceDiv);
-                                div.appendChild(img);
-                                div.appendChild(textDiv);
-                                div.onclick = () => window.location.href = item.url;
-                                suggestionsBox.appendChild(div);
-                            });
-                            suggestionsBox.style.display = 'block';
-                        } else {
-                            suggestionsBox.style.display = 'none';
-                        }
-                    });
-                }, 300);
-            });
-
-            document.addEventListener('click', function(e) {
-                if(!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
-                    suggestionsBox.style.display = 'none';
-                }
-            });
-        }
-    </script>
+    <span id="user-status" style="display:none;">{{request.user}}</span>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/cart.js' %}"></script>
+    <script src="{% static 'js/wishlist.js' %}"></script>
+    <script src="{% static 'js/search.js' %}"></script>
     {% block js %}{% endblock %}
 </body>
 </html>
