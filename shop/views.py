@@ -676,10 +676,20 @@ def seller_analytics(request):
     
     total_customers = Order.objects.filter(id__in=order_ids).values('customer').distinct().count()
     
-    # Simple growth calculation (this month vs last month)
-    this_month = now().month
-    last_month_revenue = sum([item.get_total for item in seller_order_items.filter(order__date_ordered__month=this_month-1)])
-    this_month_revenue = sum([item.get_total for item in seller_order_items.filter(order__date_ordered__month=this_month)])
+    # Growth calculation (this month vs last month) with year boundary handling
+    today = now()
+    this_month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_month_end = this_month_start - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    this_month_items = seller_order_items.filter(order__date_ordered__gte=this_month_start)
+    last_month_items = seller_order_items.filter(
+        order__date_ordered__gte=last_month_start,
+        order__date_ordered__lt=this_month_start
+    )
+
+    last_month_revenue = sum([item.get_total for item in last_month_items])
+    this_month_revenue = sum([item.get_total for item in this_month_items])
     
     growth = 0
     if last_month_revenue > 0:
