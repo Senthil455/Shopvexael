@@ -14,6 +14,7 @@ from django.db.models.functions import TruncDate
 from django.utils.timezone import now, timedelta
 from functools import wraps
 from .utils import notify_order_update, notify_seller_approval
+from .forms import RegisterForm, LoginForm, ContactForm, CheckoutForm, SellerSignupForm, SellerProductForm, SellerSettingsForm, ChangePasswordForm
 
 def seller_required(f):
     @wraps(f)
@@ -249,16 +250,14 @@ def change_password(request):
     return render(request, "change_password.html", {'cartItems':cartItems})
 
 def contact(request):
-    if request.method=="POST":       
-        name = request.POST['name']
-        email = request.POST['email']
-        phone = request.POST['phone']
-        desc = request.POST['desc']
-        contact = Contact(name=name, email=email, phone=phone, desc=desc)
-        contact.save()
-        alert = True
-        return render(request, 'contact.html', {'alert':alert})
-    return render(request, "contact.html")
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            Contact.objects.create(name=cd['name'], email=cd['email'], phone=cd['phone'], desc=cd['desc'])
+            return render(request, 'contact.html', {'alert': True})
+        return render(request, 'contact.html', {'form': form})
+    return render(request, "contact.html", {'form': ContactForm()})
 
 def loggedin_contact(request):
     data = cartData(request)
@@ -312,44 +311,29 @@ def tracker(request):
 def register(request):
     if request.user.is_authenticated:
         return redirect("/")
-    else:
-        if request.method=="POST":   
-            username = request.POST['username']
-            full_name=request.POST['full_name']
-            password1 = request.POST['password1']
-            password2 = request.POST['password2']
-            phone_number = request.POST['phone_number']
-            email = request.POST['email']
-
-            if password1 != password2:
-                alert = True
-                return render(request, "register.html", {'alert':alert})
-            
-            user = User.objects.create_user(username=username, password=password1, email=email)
-            customers = Customer.objects.create(user=user, name=full_name, phone_number=phone_number, email=email)
-            user.save()
-            customers.save()
-            
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            user = User.objects.create_user(username=cd['username'], password=cd['password1'], email=cd['email'])
+            Customer.objects.create(user=user, name=cd['full_name'], phone_number=cd['phone_number'], email=cd['email'])
             login(request, user)
             return redirect("/")
-    return render(request, "register.html")
+        return render(request, "register.html", {'form': form, 'alert': True})
+    return render(request, "register.html", {'form': RegisterForm()})
 
 def Login(request):
     if request.user.is_authenticated:
         return redirect("/")
-    else:
-        if request.method == "POST":
-            username = request.POST['username']
-            password = request.POST['password']
-            user = authenticate(username=username, password=password)
-
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password'])
             if user is not None:
                 login(request, user)
                 return redirect("/")
-            else:
-                alert = True
-                return render(request, "login.html", {"alert":alert})
-    return render(request, "login.html")
+        return render(request, "login.html", {"alert": True})
+    return render(request, "login.html", {"form": LoginForm()})
 
 def Logout(request):
     logout(request)
