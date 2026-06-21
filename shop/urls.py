@@ -48,6 +48,7 @@ urlpatterns = [
     # Placeholders & New Features
     path("settings/", views.seller_settings, name="settings"),
     path("notifications/", views.notifications, name="notifications"),
+    path("cancel_order/<int:order_id>/", views.cancel_order, name="cancel_order"),
     path("ajax_search/", views.ajax_search, name="ajax_search"),
     
     path("about/", lambda r: views.generic_placeholder(r, 'About Us'), name="about"),
