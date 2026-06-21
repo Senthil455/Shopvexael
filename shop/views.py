@@ -39,7 +39,7 @@ def index(request):
     data = cartData(request)
     cartItems = data['cartItems']
     
-    products = Product.objects.filter(is_deleted=False).select_related('category', 'brand', 'seller')
+    products = Product.objects.filter(is_deleted=False).select_related('category', 'brand', 'seller', 'subcategory')
     categories = Category.objects.all()
     brands = Brand.objects.all()
     
@@ -223,9 +223,9 @@ def updateItem(request):
     return JsonResponse({'message': 'Item was added', 'cartItems': order.get_cart_items}, safe=False)
 
 def product_view(request, myid):
-    product = Product.objects.filter(id=myid).first()
+    product = Product.objects.select_related('seller', 'category', 'brand').filter(id=myid).first()
     feature = Feature.objects.filter(product=product)
-    reviews = Review.objects.filter(product=product)
+    reviews = Review.objects.filter(product=product).select_related('customer__user')
     data = cartData(request)
     items = data['items']
     order = data['order']

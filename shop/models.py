@@ -62,11 +62,11 @@ class Coupon(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=255)
-    seller = models.ForeignKey(Seller, on_delete=models.SET_NULL, null=True, blank=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
-    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True, blank=True)
-    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField(max_length=255, db_index=True)
+    seller = models.ForeignKey(Seller, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
 
     price = models.FloatField()
     discount_price = models.FloatField(null=True, blank=True)
@@ -78,7 +78,7 @@ class Product(models.Model):
     # Base Image (Thumbnail)
     image = models.ImageField(upload_to="products/", default="")
 
-    stock = models.IntegerField(default=10)
+    stock = models.IntegerField(default=10, db_index=True)
     sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
     barcode = models.CharField(max_length=100, null=True, blank=True)
 
@@ -86,18 +86,25 @@ class Product(models.Model):
     delivery_time = models.CharField(max_length=100, null=True, blank=True)
     return_policy = models.CharField(max_length=200, null=True, blank=True)
 
-    tags = models.CharField(max_length=500, null=True, blank=True)  # Comma separated
+    tags = models.CharField(max_length=500, null=True, blank=True)
     weight = models.CharField(max_length=50, null=True, blank=True)
     dimensions = models.CharField(max_length=100, null=True, blank=True)
     country_of_origin = models.CharField(max_length=100, null=True, blank=True)
 
     views_count = models.IntegerField(default=0)
-    date_added = models.DateTimeField(default=now)
+    date_added = models.DateTimeField(default=now, db_index=True)
 
-    is_trending = models.BooleanField(default=False)
-    is_featured = models.BooleanField(default=False)
-    is_bestseller = models.BooleanField(default=False)
-    is_deleted = models.BooleanField(default=False)
+    is_trending = models.BooleanField(default=False, db_index=True)
+    is_featured = models.BooleanField(default=False, db_index=True)
+    is_bestseller = models.BooleanField(default=False, db_index=True)
+    is_deleted = models.BooleanField(default=False, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['-date_added', 'is_featured', 'is_bestseller']),
+            models.Index(fields=['category', 'is_deleted']),
+            models.Index(fields=['seller', 'is_deleted']),
+        ]
 
     def __str__(self):
         return self.name
