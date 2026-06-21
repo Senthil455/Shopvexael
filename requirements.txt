@@ -6,4 +6,4 @@ gunicorn==22.0.0
 dj-database-url==2.1.0
 psycopg2-binary>=2.9.9
 serverless-wsgi==3.0.2
-Pillow==10.4.0
+Pillow>=10.4.0
