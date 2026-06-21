@@ -1,0 +1,6 @@
+# Development requirements
+-r requirements.txt
+
+django-debug-toolbar>=4.0
+model-bakery>=1.10
+coverage>=7.0
