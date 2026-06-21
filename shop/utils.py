@@ -1,8 +1,11 @@
+import logging
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from .models import Notification
+
+logger = logging.getLogger(__name__)
 
 def send_custom_email(subject, template_name, context, recipient_list):
     """Helper to send HTML emails with plain-text fallback"""
@@ -14,7 +17,7 @@ def send_custom_email(subject, template_name, context, recipient_list):
         send_mail(subject, plain_message, from_email, recipient_list, html_message=html_message)
         return True
     except Exception as e:
-        print(f"Email failed: {e}")
+        logger.error("Email failed: %s", e)
         return False
 
 def notify_order_update(order):
