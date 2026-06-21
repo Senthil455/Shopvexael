@@ -8,7 +8,6 @@ from django.contrib.auth import authenticate, login, logout
 from . inherit import cartData
 from django.db.models import Q, Sum, Count
 from django.db.models.functions import TruncDate
-from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now, timedelta
 from functools import wraps
 from .utils import notify_order_update, notify_seller_approval
@@ -550,7 +549,6 @@ def seller_orders(request):
     context = {'seller': seller, 'orders': orders_data, 'cartItems': cartItems}
     return render(request, 'seller_orders.html', context)
 
-@csrf_exempt
 @seller_required
 def update_order_status(request, order_id):
     if request.method == 'POST':
@@ -726,7 +724,6 @@ def seller_inventory(request):
         'cartItems': cartData(request)['cartItems']
     })
 
-@csrf_exempt
 @seller_required
 def update_stock(request, product_id):
     if request.method == 'POST':
