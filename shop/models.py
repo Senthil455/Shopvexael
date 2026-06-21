@@ -6,7 +6,7 @@ from django.utils.timezone import now
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    email = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100)
     phone_number = models.CharField(max_length=15, null=True, blank=True)
 
     def __str__(self):
@@ -248,7 +248,7 @@ class CheckoutDetail(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
-    total_amount = models.CharField(max_length=10, blank=True, null=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     address = models.CharField(max_length=300)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
