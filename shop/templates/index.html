@@ -105,6 +105,25 @@
         </div>
         {% endfor %}
     </div>
+
+    {% if products.has_other_pages %}
+    <div class="pagination" style="display:flex; justify-content:center; gap:8px; margin-top:2rem; flex-wrap:wrap;">
+        {% if products.has_previous %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}page=1" class="btn-secondary" style="padding:8px 16px;">&laquo; First</a>
+        <a href="?{% if query %}q={{ query }}&{% endif %}page={{ products.previous_page_number }}" class="btn-secondary" style="padding:8px 16px;">Previous</a>
+        {% endif %}
+
+        <span style="display:flex; align-items:center; padding:8px 16px; color:var(--text-secondary);">
+            Page {{ products.number }} of {{ products.paginator.num_pages }}
+        </span>
+
+        {% if products.has_next %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}page={{ products.next_page_number }}" class="btn-secondary" style="padding:8px 16px;">Next</a>
+        <a href="?{% if query %}q={{ query }}&{% endif %}page={{ products.paginator.num_pages }}" class="btn-secondary" style="padding:8px 16px;">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
     {% else %}
     <p>No products found matching your criteria.</p>
     {% endif %}
