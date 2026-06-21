@@ -28,7 +28,7 @@ if not SECRET_KEY:
             '  python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"'
         )
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
