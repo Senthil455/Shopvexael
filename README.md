@@ -1,45 +1,42 @@
-# Shopvexael — Premium Multi-Vendor Marketplace
+# Shopvexael — Multi-Vendor Marketplace
 
+Shopvexael is an eCommerce platform built with Django. It features a modern dark-mode interface and multi-vendor architecture for customers, sellers, and administrators.
 
-Shopvexael is a professional, high-performance eCommerce platform built with Django. It features a modern, glassmorphic dark-mode interface and a robust multi-vendor architecture, providing a seamless experience for customers, sellers, and administrators.
+![Django](https://img.shields.io/badge/Django-5.2-092e20?style=for-the-badge&logo=django)
+![Python](https://img.shields.io/badge/Python-3.11+-3776ab?style=for-the-badge&logo=python)
 
-![Banner](https://img.shields.io/badge/Shopvexael-Production--Ready-gold?style=for-the-badge)
-![Django](https://img.shields.io/badge/Django-6.0+-092e20?style=for-the-badge&logo=django)
-![Python](https://img.shields.io/badge/Python-3.14+-3776ab?style=for-the-badge&logo=python)
+## Features
 
-## 🚀 Key Features
+### Customer Experience
+- Premium dark-mode UI with glassmorphic design
+- AJAX-powered real-time search with suggestions
+- Order tracking with timeline and status updates
+- Product reviews with ratings and seller replies
+- Cart management, wishlists, and multiple payment methods
 
-### 🛒 Customer Experience
-- **Premium UI/UX**: Dark-mode glassmorphic design with smooth micro-animations.
-- **Smart Search**: AJAX-powered real-time search with instant suggestions.
-- **Order Tracking**: Animated tracking timeline with real-time status updates.
-- **Social Features**: Detailed product reviews with helpfulness ratings and seller replies.
-- **Shopping Essentials**: Dynamic cart management, wishlists, and multi-payment support.
+### Seller Hub
+- Sales analytics with Chart.js visualizations
+- Inventory management with stock health indicators
+- Order fulfillment with status tracking
+- Product management with soft-delete and restore
 
-### 🏪 Seller Hub (Enterprise Grade)
-- **Advanced Analytics**: Real-time sales visualization using Chart.js.
-- **Inventory Management**: Health indicators, quick stock updates, and a "Trash Bin" for soft-deleted products.
-- **Order Fulfillment**: Dedicated dashboard for tracking shipments, updating statuses, and generating invoices.
-- **Communication**: Integrated notification center for order alerts and platform updates.
+### Admin Panel
+- Platform analytics and revenue tracking
+- Seller verification and approval workflow
+- Category, brand, and product management
 
-### 🛡️ Admin Command Center
-- **Platform Analytics**: Total revenue tracking and automatic commission calculation (10%).
-- **Verification Queue**: Dedicated workflow for vetting and approving/rejecting new seller applications.
-- **Global Control**: Full management of categories, brands, and featured/trending product listings.
+## Requirements
 
-## 🛠️ Technical Stack
-- **Backend**: Django 6.0 (Python)
-- **Frontend**: Vanilla CSS (Custom Design System), JavaScript (AJAX/DOM)
-- **Database**: SQLite (Development) / PostgreSQL (Production ready)
-- **Analytics**: Chart.js
-- **Icons**: FontAwesome 5
+- Python 3.11+
+- Django 5.2
+- See `requirements.txt` for full list
 
-## 📦 Installation & Setup
+## Installation
 
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/Senthil455/Shopvexael.git
-   cd online-shopping-python-project
+   cd Shopvexael
    ```
 
 2. **Create a virtual environment**:
@@ -51,12 +48,11 @@ Shopvexael is a professional, high-performance eCommerce platform built with Dja
 
 3. **Install dependencies**:
    ```bash
-   pip install django
+   pip install -r requirements.txt
    ```
 
 4. **Run Migrations**:
    ```bash
-   python manage.py makemigrations
    python manage.py migrate
    ```
 
@@ -70,16 +66,26 @@ Shopvexael is a professional, high-performance eCommerce platform built with Dja
    python manage.py runserver
    ```
 
-## 📂 Project Structure
-- `shop/`: Core application containing models, views, and business logic.
-- `OnlineShopping/`: Project configuration (settings, master URLs).
-- `static/`: Global CSS, JavaScript, and asset files.
-- `media/`: User-uploaded product images and seller documents.
-- `templates/`: Modular HTML components with advanced layout inheritance.
+## Environment Variables
 
-## 🔐 Admin Credentials (Demo)
-If you are testing the local development environment:
-- **URL**: `/admin_dashboard/`
-- **Username**: `admin`
-- **Password**: `adminpassword`
+Create a `.env` file or set these environment variables:
 
+| Variable | Description | Default |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | Django secret key (required in production) | Auto-generated in dev |
+| `DJANGO_DEBUG` | Enable debug mode | `False` |
+| `DJANGO_ALLOWED_HOSTS` | Comma-separated hostnames | `localhost,127.0.0.1` |
+| `DATABASE_URL` | PostgreSQL connection string (production) | SQLite (dev) |
+| `DJANGO_DEFAULT_FROM_EMAIL` | Sender email address | `noreply@shopvexael.com` |
+| `DJANGO_EMAIL_BACKEND` | Email backend | Console (dev) |
+
+## Project Structure
+
+- `shop/`: Core application (models, views, templates)
+- `OnlineShopping/`: Project configuration (settings, URLs)
+- `static/`: Global CSS, JavaScript, assets
+- `media/`: User-uploaded images
+
+## Deployment
+
+The project includes a `netlify.toml` for serverless deployment on Netlify with `gunicorn` as the WSGI server. Set the required environment variables in your hosting dashboard.
