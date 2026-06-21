@@ -147,12 +147,19 @@ def checkout(request):
         if order.get_cart_items <= 0:
             return redirect('cart')
             
-        shipping_adress = CheckoutDetail.objects.create(
+        shipping_address = CheckoutDetail.objects.create(
             address=address, city=city, phone_number=phone_number, 
             state=state, zipcode=zipcode, customer=request.user.customer, 
             total_amount=total, order=order, payment=payment
         )
-        
+
+        import uuid
+        Payment.objects.create(
+            order=order, method=payment,
+            transaction_id=f"TXN-{uuid.uuid4().hex[:12].upper()}",
+            amount=total, status='COMPLETED'
+        )
+
         order.complete = True
         order.status = 'Confirmed'
         order.save()
