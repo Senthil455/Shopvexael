@@ -157,3 +157,28 @@ SECURE_HSTS_PRELOAD = os.environ.get('DJANGO_SECURE_HSTS_PRELOAD', 'True') == 'T
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+X_FRAME_OPTIONS = 'DENY'
+
+# Content Security Policy (via header)
+CSP_DEFAULT_SRC = os.environ.get('DJANGO_CSP_DEFAULT_SRC', "'self' https: data:").split('|')
+CSP_STYLE_SRC = os.environ.get('DJANGO_CSP_STYLE_SRC', "'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com").split('|')
+CSP_SCRIPT_SRC = os.environ.get('DJANGO_CSP_SCRIPT_SRC', "'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://code.jquery.com").split('|')
+CSP_IMG_SRC = os.environ.get('DJANGO_CSP_IMG_SRC', "'self' data: https: http://via.placeholder.com https://picsum.photos").split('|')
+CSP_FONT_SRC = os.environ.get('DJANGO_CSP_FONT_SRC', "'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com").split('|')
+CSP_CONNECT_SRC = os.environ.get('DJANGO_CSP_CONNECT_SRC', "'self'").split('|')
+
+# Caching
+CACHES = {
+    'default': {
+        'BACKEND': os.environ.get('DJANGO_CACHE_BACKEND', 'django.core.cache.backends.locmem.LocMemCache'),
+        'LOCATION': os.environ.get('DJANGO_CACHE_LOCATION', 'unique-snowflake'),
+    }
+}
+
+# Rate Limiting / Throttling (Middleware-level)
+SILENCED_SYSTEM_CHECKS = ['security.W019']

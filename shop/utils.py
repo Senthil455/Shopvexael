@@ -1,5 +1,8 @@
 import logging
+import time
+from functools import wraps
 from django.core.mail import send_mail
+from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
@@ -34,6 +37,29 @@ def notify_order_update(order):
     subject = f"Order Update - Shopvexael Order #{order.id}"
     context = {'order': order}
     send_custom_email(subject, 'emails/order_update.html', context, [order.customer.email])
+
+# Simple in-memory rate limiter (per-view, per-IP)
+_rate_limit_store = {}
+
+def rate_limit(max_requests=10, window_seconds=60):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapped(request, *args, **kwargs):
+            ip = request.META.get('REMOTE_ADDR', 'unknown')
+            key = f"{view_func.__name__}:{ip}"
+            now = time.time()
+            window_start = now - window_seconds
+            if key in _rate_limit_store:
+                _rate_limit_store[key] = [t for t in _rate_limit_store[key] if t > window_start]
+                if len(_rate_limit_store[key]) >= max_requests:
+                    return JsonResponse({'error': 'Rate limit exceeded. Try again later.'}, status=429)
+                _rate_limit_store[key].append(now)
+            else:
+                _rate_limit_store[key] = [now]
+            return view_func(request, *args, **kwargs)
+        return wrapped
+    return decorator
+
 
 def notify_seller_approval(seller):
     """Notifies seller about account approval"""
