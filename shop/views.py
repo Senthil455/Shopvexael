@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from . inherit import cartData
 from django.db.models import Q, Sum, Count
 from django.db.models.functions import TruncDate
+from django.core.paginator import Paginator
 from django.utils.timezone import now, timedelta
 from functools import wraps
 from .utils import notify_order_update, notify_seller_approval
@@ -80,8 +81,12 @@ def index(request):
         # Default sort by featured/bestseller
         products = products.order_by('-is_featured', '-is_bestseller', '-date_added')
         
+    paginator = Paginator(products, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'products': products[:50], # Limit to 50 for performance
+        'products': page_obj,
         'cartItems': cartItems,
         'categories': categories,
         'brands': brands,
