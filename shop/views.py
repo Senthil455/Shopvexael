@@ -827,6 +827,27 @@ def reject_seller(request, seller_id):
     )
     return redirect('/admin_dashboard/')
 
+def cancel_order(request, order_id):
+    if not request.user.is_authenticated:
+        return redirect('/login/')
+    order = get_object_or_404(Order, id=order_id, customer=request.user.customer)
+    if order.status in ('Pending', 'Confirmed'):
+        old_status = order.status
+        order.status = 'Cancelled'
+        order.save()
+        for item in order.orderitem_set.all():
+            p = item.product
+            p.stock += item.quantity
+            p.save()
+            if item.variant:
+                v = item.variant
+                v.stock += item.quantity
+                v.save()
+        UpdateOrder.objects.create(order_id=order, desc="Order Cancelled by Customer")
+        notify_order_update(order)
+    return redirect('/profile/')
+
+
 def notifications(request):
     if not request.user.is_authenticated:
         return redirect('/login/')
