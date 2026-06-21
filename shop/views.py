@@ -3,7 +3,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from django.http import JsonResponse
 import json
+import logging
 from django.contrib.auth.models import User
+
+logger = logging.getLogger(__name__)
 from django.contrib.auth import authenticate, login, logout
 from . inherit import cartData
 from django.db.models import Q, Sum, Count
@@ -92,9 +95,8 @@ def cart(request):
     cartItems = data['cartItems']
     try:
         cart = json.loads(request.COOKIES['cart'])
-    except:
+    except (json.JSONDecodeError, KeyError):
         cart = {}
-    print('Cart:', cart)
 
     for i in cart:
         try:
@@ -117,8 +119,8 @@ def cart(request):
                 'get_total':total
             }
             items.append(item)
-        except:
-            pass
+        except Exception as e:
+            logger.warning("Cart item error for product %s: %s", i, e)
     return render(request, "cart.html", {'items':items, 'order':order, 'cartItems':cartItems})
 
 def checkout(request):
@@ -235,18 +237,18 @@ def change_password(request):
     if request.method == "POST":
         current_password = request.POST['current_password']
         new_password = request.POST['new_password']
-        try:
-            u = User.objects.get(id=request.user.id)
-            if u.check_password(current_password):
-                u.set_password(new_password)
-                u.save()
-                alert = True
-                return render(request, "change_password.html", {'alert':alert})
-            else:
-                currpasswrong = True
-                return render(request, "change_password.html", {'currpasswrong':currpasswrong})
-        except:
-            pass
+    try:
+        u = User.objects.get(id=request.user.id)
+        if u.check_password(current_password):
+            u.set_password(new_password)
+            u.save()
+            alert = True
+            return render(request, "change_password.html", {'alert':alert})
+        else:
+            currpasswrong = True
+            return render(request, "change_password.html", {'currpasswrong':currpasswrong})
+    except User.DoesNotExist:
+        pass
     return render(request, "change_password.html", {'cartItems':cartItems})
 
 def contact(request):
