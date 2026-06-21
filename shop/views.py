@@ -170,6 +170,11 @@ def checkout(request):
             prev_stock = p.stock
             p.stock = max(0, p.stock - item.quantity)
             p.save()
+
+            if item.variant:
+                v = item.variant
+                v.stock = max(0, v.stock - item.quantity)
+                v.save()
             
             InventoryLog.objects.create(
                 product=p,
@@ -571,6 +576,11 @@ def update_order_status(request, order_id):
                 prev_stock = p.stock
                 p.stock += item.quantity
                 p.save()
+
+                if item.variant:
+                    v = item.variant
+                    v.stock += item.quantity
+                    v.save()
                 
                 InventoryLog.objects.create(
                     product=p,
