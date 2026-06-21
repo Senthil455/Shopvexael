@@ -148,10 +148,10 @@ class ProductVariant(models.Model):
 
 class Feature(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    feature = models.CharField(max_length=1000, null=True, blank=True)
+    description = models.CharField(max_length=1000, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.product} Feature: {self.feature}"
+        return f"{self.product} Feature: {self.description or ''}"
 
 
 class Review(models.Model):
@@ -205,7 +205,7 @@ class Order(models.Model):
     def get_cart_total(self):
         orderitems = self.orderitem_set.all()
         total = sum([item.get_total for item in orderitems])
-        if self.coupon_applied and self.coupon_applied.active:
+        if self.coupon_applied and self.coupon_applied.active and self.coupon_applied.discount_percentage:
             discount = total * (self.coupon_applied.discount_percentage / 100)
             total -= discount
         return total
