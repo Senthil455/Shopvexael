@@ -156,30 +156,50 @@
                 itemsList.innerHTML = '';
                 const items = JSON.parse(data.itemsJson);
                 items.forEach(item => {
-                    itemsList.innerHTML += `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
-                            <div style="display: flex; align-items: center; gap: 15px;">
-                                <div style="width: 40px; height: 40px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-box" style="color: var(--bg-dark);"></i>
-                                </div>
-                                <span style="font-weight: 500;">${item.name} <span style="color: var(--text-secondary);">x ${item.qty}</span></span>
-                            </div>
-                            <span style="font-weight: bold; color: var(--accent-gold);">₹${item.price}</span>
-                        </div>
-                    `;
+                    const itemDiv = document.createElement('div');
+                    itemDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;';
+                    const leftDiv = document.createElement('div');
+                    leftDiv.style.cssText = 'display: flex; align-items: center; gap: 15px;';
+                    const iconDiv = document.createElement('div');
+                    iconDiv.style.cssText = 'width: 40px; height: 40px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center;';
+                    iconDiv.innerHTML = '<i class="fas fa-box" style="color: var(--bg-dark);"></i>';
+                    const nameSpan = document.createElement('span');
+                    nameSpan.style.fontWeight = '500';
+                    nameSpan.textContent = item.name + ' ';
+                    const qtySpan = document.createElement('span');
+                    qtySpan.style.color = 'var(--text-secondary)';
+                    qtySpan.textContent = 'x ' + item.qty;
+                    nameSpan.appendChild(qtySpan);
+                    leftDiv.appendChild(iconDiv);
+                    leftDiv.appendChild(nameSpan);
+                    const priceSpan = document.createElement('span');
+                    priceSpan.style.cssText = 'font-weight: bold; color: var(--accent-gold);';
+                    priceSpan.textContent = '₹' + item.price;
+                    itemDiv.appendChild(leftDiv);
+                    itemDiv.appendChild(priceSpan);
+                    itemsList.appendChild(itemDiv);
                 });
 
                 // Inject Timeline
                 const timeline = document.getElementById('tracking-timeline');
                 timeline.innerHTML = '<div style="position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border-color);"></div>';
                 data.updates.forEach((update, index) => {
-                    timeline.innerHTML += `
-                        <div style="position: relative;" class="animate-fade">
-                            <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: ${index === 0 ? 'var(--accent-gold)' : 'var(--border-color)'}; border-radius: 50%; border: 3px solid var(--bg-dark);"></div>
-                            <div style="font-weight: bold; ${index === 0 ? 'color: var(--accent-gold);' : ''}">${update.text}</div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">${update.time}</div>
-                        </div>
-                    `;
+                    const updateDiv = document.createElement('div');
+                    updateDiv.style.position = 'relative';
+                    updateDiv.className = 'animate-fade';
+                    const dotDiv = document.createElement('div');
+                    dotDiv.style.cssText = `position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: ${index === 0 ? 'var(--accent-gold)' : 'var(--border-color)'}; border-radius: 50%; border: 3px solid var(--bg-dark);`;
+                    const textDiv = document.createElement('div');
+                    textDiv.style.fontWeight = 'bold';
+                    if (index === 0) textDiv.style.color = 'var(--accent-gold)';
+                    textDiv.textContent = update.text;
+                    const timeDiv = document.createElement('div');
+                    timeDiv.style.cssText = 'font-size: 0.8rem; color: var(--text-secondary);';
+                    timeDiv.textContent = update.time;
+                    updateDiv.appendChild(dotDiv);
+                    updateDiv.appendChild(textDiv);
+                    updateDiv.appendChild(timeDiv);
+                    timeline.appendChild(updateDiv);
                 });
                 
                 // Scroll to results

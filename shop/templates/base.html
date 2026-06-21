@@ -296,13 +296,20 @@
                                 div.style.gap = '15px';
                                 div.style.borderBottom = '1px solid var(--border-color)';
                                 div.className = 'suggestion-item';
-                                div.innerHTML = `
-                                    <img src="${item.image}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; background: white;">
-                                    <div>
-                                        <div style="font-weight: bold; font-size: 0.9rem;">${item.name}</div>
-                                        <div style="color: var(--accent-gold); font-size: 0.8rem;">₹${item.price}</div>
-                                    </div>
-                                `;
+                                const img = document.createElement('img');
+                                img.src = item.image || '';
+                                img.style.cssText = 'width: 40px; height: 40px; object-fit: cover; border-radius: 4px; background: white;';
+                                const nameDiv = document.createElement('div');
+                                nameDiv.style.cssText = 'font-weight: bold; font-size: 0.9rem;';
+                                nameDiv.textContent = item.name;
+                                const priceDiv = document.createElement('div');
+                                priceDiv.style.cssText = 'color: var(--accent-gold); font-size: 0.8rem;';
+                                priceDiv.textContent = '₹' + item.price;
+                                const textDiv = document.createElement('div');
+                                textDiv.appendChild(nameDiv);
+                                textDiv.appendChild(priceDiv);
+                                div.appendChild(img);
+                                div.appendChild(textDiv);
                                 div.onclick = () => window.location.href = item.url;
                                 suggestionsBox.appendChild(div);
                             });
