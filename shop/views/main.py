@@ -109,7 +109,7 @@ def cart(request):
             cartItems += cart[i]["quantity"]
 
             product = Product.objects.get(id=i)
-            total = (product.price * cart[i]["quantity"])
+            total = (product.final_price * cart[i]["quantity"])
 
             order["get_cart_total"] += total
             order["get_cart_items"] += cart[i]["quantity"]
@@ -118,7 +118,7 @@ def cart(request):
                 'product':{
                     'id':product.id,
                     'name':product.name,
-                    'price':product.price,
+                    'price':product.final_price,
                     'image':product.image,
                 },
                 'quantity':cart[i]["quantity"],
@@ -904,7 +904,7 @@ def ajax_search(request):
         results.append({
             'id': p.id,
             'name': p.name,
-            'price': p.price,
+            'price': p.final_price,
             'image': p.image.url if p.image else '',
             'url': f'/product_view/{p.id}/'
         })
