@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 from django.contrib.auth import authenticate, login, logout
 from shop.inherit import cartData
 from django.db.models import Q, Sum, Count
+from django.db import transaction
 from django.db.models.functions import TruncDate
 from django.core.paginator import Paginator
 from django.utils.timezone import now, timedelta
@@ -144,54 +145,60 @@ def checkout(request):
             return render(request, "checkout.html", {'items': items, 'order': order, 'cartItems': cartItems, 'form': form})
         
         cd = form.cleaned_data
-        shipping_address = CheckoutDetail.objects.create(
-            address=cd['address'], city=cd['city'], phone_number=cd['phone_number'],
-            state=cd['state'], zipcode=cd['zipcode'], customer=request.user.customer,
-            total_amount=total, order=order, payment=cd['payment']
-        )
+        transaction_id = request.POST.get('transaction_id', '').strip()
+        if not transaction_id:
+            return render(request, "checkout.html", {
+                'items': items, 'order': order, 'cartItems': cartItems, 'form': form,
+                'error': 'Transaction ID is required. Please complete the payment process.'
+            })
 
-        import uuid
-        Payment.objects.create(
-            order=order, method=cd['payment'],
-            transaction_id=f"TXN-{uuid.uuid4().hex[:12].upper()}",
-            amount=total, status='COMPLETED'
-
-        order.complete = True
-        order.status = 'Confirmed'
-        order.save()
-        
-        # Reduce stock and log
-        for item in order.orderitem_set.all():
-            p = item.product
-            prev_stock = p.stock
-            p.stock = max(0, p.stock - item.quantity)
-            p.save()
-
-            if item.variant:
-                v = item.variant
-                v.stock = max(0, v.stock - item.quantity)
-                v.save()
-            
-            InventoryLog.objects.create(
-                product=p,
-                action='PURCHASE',
-                quantity_changed=-item.quantity,
-                previous_stock=prev_stock,
-                new_stock=p.stock,
-                notes=f"Order #{order.id} placed"
+        with transaction.atomic():
+            shipping_address = CheckoutDetail.objects.create(
+                address=cd['address'], city=cd['city'], phone_number=cd['phone_number'],
+                state=cd['state'], zipcode=cd['zipcode'], customer=request.user.customer,
+                total_amount=total, order=order, payment=cd['payment']
             )
-            
-            # Notify Seller
-            if p.seller:
-                Notification.objects.create(
-                    user=p.seller.user,
-                    title="New Order Received",
-                    message=f"You have a new order for {p.name} (Qty: {item.quantity})",
-                    link=f"/seller_order_details/{order.id}/"
+
+            Payment.objects.create(
+                order=order, method=cd['payment'],
+                transaction_id=transaction_id,
+                amount=total, status='COMPLETED'
+            )
+
+            order.complete = True
+            order.status = 'Confirmed'
+            order.save()
+
+            for item in order.orderitem_set.all():
+                p = item.product
+                prev_stock = p.stock
+                p.stock = max(0, p.stock - item.quantity)
+                p.save()
+
+                if item.variant:
+                    v = item.variant
+                    v.stock = max(0, v.stock - item.quantity)
+                    v.save()
+
+                InventoryLog.objects.create(
+                    product=p,
+                    action='PURCHASE',
+                    quantity_changed=-item.quantity,
+                    previous_stock=prev_stock,
+                    new_stock=p.stock,
+                    notes=f"Order #{order.id} placed"
                 )
-        
-        UpdateOrder.objects.create(order_id=order, desc="Your Order is Successfully Placed.")
-        
+
+                if p.seller:
+                    Notification.objects.create(
+                        user=p.seller.user,
+                        title="New Order Received",
+                        message=f"You have a new order for {p.name} (Qty: {item.quantity})",
+                        link=f"/seller_order_details/{order.id}/"
+                    )
+
+            UpdateOrder.objects.create(order_id=order, desc="Your Order is Successfully Placed.")
+
         return render(request, "checkout.html", {'alert':True, 'id':order.id})
     return render(request, "checkout.html", {'items':items, 'order':order, 'cartItems':cartItems, 'form': CheckoutForm()})
 
