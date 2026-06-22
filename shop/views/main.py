@@ -250,21 +250,16 @@ def change_password(request):
     data = cartData(request)
     cartItems = data['cartItems']
     if request.method == "POST":
-        current_password = request.POST['current_password']
-        new_password = request.POST['new_password']
-    try:
-        u = User.objects.get(id=request.user.id)
-        if u.check_password(current_password):
-            u.set_password(new_password)
+        form = ChangePasswordForm(request.POST, user=request.user)
+        if form.is_valid():
+            u = request.user
+            u.set_password(form.cleaned_data['new_password'])
             u.save()
-            alert = True
-            return render(request, "change_password.html", {'alert':alert})
-        else:
-            currpasswrong = True
-            return render(request, "change_password.html", {'currpasswrong':currpasswrong})
-    except User.DoesNotExist:
-        pass
-    return render(request, "change_password.html", {'cartItems':cartItems})
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, u)
+            return render(request, "change_password.html", {'alert': True, 'cartItems': cartItems})
+        return render(request, "change_password.html", {'form': form, 'cartItems': cartItems})
+    return render(request, "change_password.html", {'form': ChangePasswordForm(user=request.user), 'cartItems': cartItems})
 
 def contact(request):
     if request.method == "POST":
