@@ -15,7 +15,7 @@ from django.core.paginator import Paginator
 from django.utils.timezone import now, timedelta
 from functools import wraps
 from shop.utils import notify_order_update, notify_seller_approval
-from shop.forms import RegisterForm, LoginForm, ContactForm, CheckoutForm, SellerSignupForm, SellerProductForm, SellerSettingsForm, ChangePasswordForm
+from shop.forms import RegisterForm, LoginForm, ContactForm, CheckoutForm, SellerSignupForm, SellerProductForm, SellerSettingsForm, ChangePasswordForm, ReviewForm
 
 def seller_required(f):
     @wraps(f)
@@ -136,29 +136,25 @@ def checkout(request):
     cartItems = data['cartItems']
     total = order.get_cart_total
     if request.method == "POST":
-        address = request.POST['address']
-        city = request.POST['city']
-        state = request.POST['state']
-        zipcode = request.POST['zipcode']
-        phone_number = request.POST['phone_number']
-        payment = request.POST['payment']
-        
-        # Check if items exist
         if order.get_cart_items <= 0:
             return redirect('cart')
             
+        form = CheckoutForm(request.POST)
+        if not form.is_valid():
+            return render(request, "checkout.html", {'items': items, 'order': order, 'cartItems': cartItems, 'form': form})
+        
+        cd = form.cleaned_data
         shipping_address = CheckoutDetail.objects.create(
-            address=address, city=city, phone_number=phone_number, 
-            state=state, zipcode=zipcode, customer=request.user.customer, 
-            total_amount=total, order=order, payment=payment
+            address=cd['address'], city=cd['city'], phone_number=cd['phone_number'],
+            state=cd['state'], zipcode=cd['zipcode'], customer=request.user.customer,
+            total_amount=total, order=order, payment=cd['payment']
         )
 
         import uuid
         Payment.objects.create(
-            order=order, method=payment,
+            order=order, method=cd['payment'],
             transaction_id=f"TXN-{uuid.uuid4().hex[:12].upper()}",
             amount=total, status='COMPLETED'
-        )
 
         order.complete = True
         order.status = 'Confirmed'
@@ -197,7 +193,7 @@ def checkout(request):
         UpdateOrder.objects.create(order_id=order, desc="Your Order is Successfully Placed.")
         
         return render(request, "checkout.html", {'alert':True, 'id':order.id})
-    return render(request, "checkout.html", {'items':items, 'order':order, 'cartItems':cartItems})
+    return render(request, "checkout.html", {'items':items, 'order':order, 'cartItems':cartItems, 'form': CheckoutForm()})
 
 def updateItem(request):
     data = json.loads(request.body)
@@ -233,13 +229,17 @@ def product_view(request, myid):
 
     if request.method=="POST":
         if request.user.is_authenticated:
-            content = request.POST.get('content')
-            rating = request.POST.get('rating', 5)
-            customer = request.user.customer
-            review = Review(customer=customer, content=content, rating=rating, product=product, verified_purchase=True)
-            review.save()
+            form = ReviewForm(request.POST)
+            if form.is_valid():
+                Review.objects.create(
+                    customer=request.user.customer,
+                    content=form.cleaned_data['content'],
+                    rating=form.cleaned_data['rating'],
+                    product=product,
+                    verified_purchase=True
+                )
         return redirect(f"/product_view/{product.id}/")
-    return render(request, "product_view.html", {'product':product, 'cartItems':cartItems, 'feature':feature, 'reviews':reviews})
+    return render(request, "product_view.html", {'product':product, 'cartItems':cartItems, 'feature':feature, 'reviews':reviews, 'review_form': ReviewForm()})
 
 def search(request):
     return redirect(f"/?q={request.GET.get('q', '')}")
@@ -399,14 +399,13 @@ def seller_signup(request):
     data = cartData(request)
     cartItems = data['cartItems']
     if request.method == 'POST':
-        company_name = request.POST.get('company_name')
-        description = request.POST.get('description')
-        if company_name and description:
-            Seller.objects.create(user=request.user, company_name=company_name, description=description, verified=False)
+        form = SellerSignupForm(request.POST)
+        if form.is_valid():
+            Seller.objects.create(user=request.user, company_name=form.cleaned_data['company_name'], description=form.cleaned_data['description'], verified=False)
             return redirect('/seller_dashboard/')
         else:
-            return render(request, 'seller_signup.html', {'alert': True, 'cartItems': cartItems})
-    return render(request, 'seller_signup.html', {'cartItems': cartItems})
+            return render(request, 'seller_signup.html', {'form': form, 'cartItems': cartItems})
+    return render(request, 'seller_signup.html', {'form': SellerSignupForm(), 'cartItems': cartItems})
 
 @seller_required
 def seller_dashboard(request):
@@ -456,49 +455,13 @@ def seller_add_product(request):
     subcategories = SubCategory.objects.all()
     brands = Brand.objects.all()
     if request.method == 'POST':
-        name = request.POST.get('name')
-        sku = request.POST.get('sku')
-        category_id = request.POST.get('category')
-        subcategory_id = request.POST.get('subcategory')
-        brand_id = request.POST.get('brand')
-        short_description = request.POST.get('short_description')
-        description = request.POST.get('description')
-        price = request.POST.get('price')
-        discount_price = request.POST.get('discount_price')
-        stock = request.POST.get('stock')
-        tags = request.POST.get('tags')
-        image = request.FILES.get('image')
-        
-        offer_percentage = 0
-        if price and discount_price:
-            p = float(price)
-            dp = float(discount_price)
-            if p > dp:
-                offer_percentage = ((p - dp) / p) * 100
-        
-        product = Product.objects.create(
-            seller=seller, name=name, sku=sku, category_id=category_id,
-            subcategory_id=subcategory_id if subcategory_id else None,
-            brand_id=brand_id, short_description=short_description,
-            description=description, price=price,
-            discount_price=discount_price if discount_price else None,
-            offer_percentage=offer_percentage, stock=stock, tags=tags, image=image
-        )
-        
-        InventoryLog.objects.create(
-            product=product,
-            action='MANUAL',
-            quantity_changed=stock,
-            previous_stock=0,
-            new_stock=stock,
-            notes="Initial stock on product creation"
-        )
-        
-        return redirect('/seller_products/')
-    context = {
+        form = SellerProductForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return render(request, 'seller_add_product.html', {
         'seller': seller, 'cartItems': cartItems, 'categories': categories,
-        'subcategories': subcategories, 'brands': brands
-    }
+        'subcategories': subcategories, 'brands': brands,
+        'is_delete_enabled': False, 'form': SellerProductForm()
+        }
     return render(request, 'seller_add_product.html', context)
 
 @admin_required
@@ -795,23 +758,36 @@ def update_stock(request, product_id):
 def seller_settings(request):
     seller = Seller.objects.get(user=request.user)
     if request.method == 'POST':
-        seller.company_name = request.POST.get('company_name')
-        seller.description = request.POST.get('description')
-        seller.save()
+        form = SellerSettingsForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            seller.company_name = cd['company_name']
+            seller.description = cd.get('description', '')
+            seller.save()
+            
+            user = request.user
+            user.email = cd['email']
+            user.save()
+            
+            customer = user.customer
+            customer.name = cd['full_name']
+            customer.phone_number = cd.get('phone_number', '')
+            customer.save()
+            
+            return render(request, 'seller_settings.html', {'seller': seller, 'form': form, 'success': True, 'cartItems': cartData(request)['cartItems']})
         
-        user = request.user
-        user.email = request.POST.get('email')
-        user.save()
+        return render(request, 'seller_settings.html', {'seller': seller, 'form': form, 'cartItems': cartData(request)['cartItems']})
         
-        customer = user.customer
-        customer.name = request.POST.get('full_name')
-        customer.phone_number = request.POST.get('phone_number')
-        customer.save()
-        
-        return render(request, 'seller_settings.html', {'seller': seller, 'success': True, 'cartItems': cartData(request)['cartItems']})
-        
+    initial_data = {
+        'company_name': seller.company_name,
+        'description': seller.description,
+        'email': request.user.email,
+        'full_name': request.user.customer.name,
+        'phone_number': request.user.customer.phone_number,
+    }
     return render(request, 'seller_settings.html', {
-        'seller': seller, 
+        'seller': seller,
+        'form': SellerSettingsForm(initial=initial_data),
         'cartItems': cartData(request)['cartItems']
     })
 
