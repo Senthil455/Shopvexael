@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.timezone import now
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db.models import Avg
 
 
 class Customer(models.Model):
@@ -337,3 +340,11 @@ class InventoryLog(models.Model):
 
     def __str__(self):
         return f"{self.product.name}: {self.action} ({self.quantity_changed:+d})"
+
+
+@receiver(post_save, sender=Review)
+def update_seller_rating(sender, instance, **kwargs):
+    avg = Review.objects.filter(product__seller=instance.product.seller).aggregate(
+        avg_rating=Avg('rating')
+    )['avg_rating']
+    Seller.objects.filter(id=instance.product.seller.id).update(rating=avg_rating or 0.0)
