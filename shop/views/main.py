@@ -872,7 +872,11 @@ def seller_analytics_data(request):
     ).annotate(
         date=TruncDate('order__date_ordered')
     ).values('date').annotate(
-        revenue=Sum(models.F('quantity') * models.F('product__price')), # Simplified for speed
+        revenue=Sum(models.F('quantity') * models.Case(
+            models.When(product__discount_price__isnull=False, then=models.F('product__discount_price')),
+            default=models.F('product__price'),
+            output_field=models.FloatField()
+        )),
         orders=Count('order', distinct=True)
     ).order_by('date')
     
