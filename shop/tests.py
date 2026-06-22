@@ -1,6 +1,10 @@
+import json
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
+from django.test.client import RequestFactory
+from django.http import JsonResponse
 from .models import Customer, Seller, Category, Brand, Product, Order, OrderItem, Coupon, ProductVariant, Review, Wishlist, Contact, CheckoutDetail, InventoryLog
+from shop.utils import rate_limit
 
 
 
@@ -107,6 +111,10 @@ class ViewTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(username='testuser', password='testpass123', email='test@example.com')
         Customer.objects.create(user=self.user, name='Test Customer', email='test@example.com')
+        self.seller_user = User.objects.create_user(username='seller', password='testpass123', email='seller@example.com')
+        self.seller = Seller.objects.create(user=self.seller_user, company_name='Test Seller')
+        self.category = Category.objects.create(name='Electronics', slug='electronics')
+        self.brand = Brand.objects.create(name='TestBrand', slug='testbrand')
 
     def test_index_page(self):
         response = self.client.get('/')
@@ -299,3 +307,95 @@ class ViewTests(TestCase):
 
         same_customer = Customer.objects.get(user=self.user)
         self.assertEqual(same_customer.id, original_customer.id)
+
+    def test_cart_total_uses_final_price_with_discount(self):
+        """
+        Regression test for issue #65: cart total should use
+        product.final_price (which accounts for discount_price)
+        instead of product.price.
+        """
+        self.client.login(username='testuser', password='testpass123')
+        Product.objects.create(
+            name='Discounted Item', seller=self.seller, category=self.category,
+            brand=self.brand, price=100.00, discount_price=75.00, stock=10
+        )
+        product = Product.objects.get(name='Discounted Item')
+        self.assertEqual(product.final_price, 75.00)
+
+        self.client.post(f'/update_item/', json.dumps({
+            'productID': product.id, 'action': 'add'
+        }), content_type='application/json')
+
+        response = self.client.get('/cart/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '75.0')
+
+    def test_cart_total_uses_final_price_without_discount(self):
+        """
+        Regression test for issue #65: cart total should use
+        product.price when no discount_price is set.
+        """
+        self.client.login(username='testuser', password='testpass123')
+        product = Product.objects.create(
+            name='Full Price Item', seller=self.seller, category=self.category,
+            brand=self.brand, price=50.00, stock=10
+        )
+        self.assertEqual(product.final_price, 50.00)
+
+        self.client.post(f'/update_item/', json.dumps({
+            'productID': product.id, 'action': 'add'
+        }), content_type='application/json')
+
+        response = self.client.get('/cart/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '50.0')
+
+    def test_rate_limiter_blocks_excessive_requests(self):
+        """
+        Regression test for issue #69: the cache-based rate limiter
+        should return 429 after max_requests are exceeded within the
+        window.
+        """
+        factory = RequestFactory()
+        request = factory.get('/')
+        request.META['REMOTE_ADDR'] = '192.0.2.1'
+
+        call_count = 0
+
+        @rate_limit(max_requests=3, window_seconds=60)
+        def test_view(req):
+            nonlocal call_count
+            call_count += 1
+            return JsonResponse({'ok': True})
+
+        for i in range(3):
+            response = test_view(request)
+            self.assertEqual(response.status_code, 200)
+        self.assertEqual(call_count, 3)
+
+        response = test_view(request)
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(call_count, 3)
+
+    def test_rate_limiter_allows_different_ips(self):
+        """
+        Regression test for issue #69: rate limiter should track
+        each IP independently.
+        """
+        factory = RequestFactory()
+
+        request_a = factory.get('/')
+        request_a.META['REMOTE_ADDR'] = '192.0.2.1'
+        request_b = factory.get('/')
+        request_b.META['REMOTE_ADDR'] = '192.0.2.2'
+
+        @rate_limit(max_requests=2, window_seconds=60)
+        def test_view(req):
+            return JsonResponse({'ok': True})
+
+        self.assertEqual(test_view(request_a).status_code, 200)
+        self.assertEqual(test_view(request_b).status_code, 200)
+        self.assertEqual(test_view(request_a).status_code, 200)
+        self.assertEqual(test_view(request_a).status_code, 429)
+        self.assertEqual(test_view(request_b).status_code, 200)
+        self.assertEqual(test_view(request_b).status_code, 429)
