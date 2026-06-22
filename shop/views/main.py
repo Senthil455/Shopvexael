@@ -223,7 +223,7 @@ def updateItem(request):
     return JsonResponse({'message': 'Item was added', 'cartItems': order.get_cart_items}, safe=False)
 
 def product_view(request, myid):
-    product = Product.objects.select_related('seller', 'category', 'brand').filter(id=myid).first()
+    product = get_object_or_404(Product.objects.select_related('seller', 'category', 'brand'), id=myid, is_deleted=False)
     feature = Feature.objects.filter(product=product)
     reviews = Review.objects.filter(product=product).select_related('customer__user')
     data = cartData(request)
@@ -595,8 +595,10 @@ def update_order_status(request, order_id):
 @seller_required
 def seller_order_details(request, order_id):
     seller = Seller.objects.get(user=request.user)
-    order = get_object_or_404(Order, id=order_id)
-    items = OrderItem.objects.filter(order=order, product__seller=seller)
+    items = OrderItem.objects.filter(order__id=order_id, product__seller=seller)
+    if not items.exists():
+        return redirect('seller_orders')
+    order = items.first().order
     seller_total = sum([item.get_total for item in items])
     shipping = CheckoutDetail.objects.filter(order=order).first()
     tracking_history = UpdateOrder.objects.filter(order_id=order).order_by('-datetime')
