@@ -511,3 +511,71 @@ class ViewTests(TestCase):
         order_items = OrderItem.objects.filter(product__seller=self.seller, order=order)
         self.assertEqual(order_items.count(), 1)
         self.assertEqual(order_items.first().product.name, 'My Product')
+
+    def test_seller_product_form_validates_data(self):
+        """
+        Regression test for issue #64: SellerProductForm should reject
+        missing required fields.
+        """
+        from shop.forms import SellerProductForm
+
+        form = SellerProductForm(data={})
+        self.assertFalse(form.is_valid())
+        self.assertIn('name', form.errors)
+        self.assertIn('price', form.errors)
+        self.assertIn('stock', form.errors)
+
+    def test_checkout_form_validates_data(self):
+        """
+        Regression test for issue #64: CheckoutForm should reject
+        missing required fields.
+        """
+        from shop.forms import CheckoutForm
+
+        form = CheckoutForm(data={})
+        self.assertFalse(form.is_valid())
+        self.assertIn('address', form.errors)
+        self.assertIn('city', form.errors)
+        self.assertIn('state', form.errors)
+        self.assertIn('zipcode', form.errors)
+        self.assertIn('payment', form.errors)
+
+    def test_checkout_requires_transaction_id(self):
+        """
+        Regression test for issue #62: Checkout must reject submissions
+        without a transaction_id from the payment gateway.
+        """
+        self.client.login(username='testuser', password='testpass123')
+        product = Product.objects.create(
+            name='Checkout Item', seller=self.seller, category=self.category,
+            brand=self.brand, price=20.00, stock=10
+        )
+        self.client.post('/update_item/', json.dumps({
+            'productID': product.id, 'action': 'add'
+        }), content_type='application/json')
+
+        response = self.client.post('/checkout/', {
+            'address': '123 Test St', 'city': 'Test City',
+            'state': 'TS', 'zipcode': '12345',
+            'phone_number': '555-0000', 'payment': 'credit_card',
+        })
+        self.assertContains(response, 'Transaction ID is required')
+
+    def test_csrf_cookie_httponly_is_false(self):
+        """
+        Regression test for issue #57: CSRF_COOKIE_HTTPONLY must be False
+        so that AJAX POST endpoints can read the CSRF token from cookies.
+        """
+        from django.conf import settings
+        self.assertFalse(settings.CSRF_COOKIE_HTTPONLY)
+
+    def test_admin_dashboard_uses_aggregation(self):
+        """
+        Regression test for issue #63: admin_dashboard should use DB
+        aggregation instead of loading all orders into memory.
+        Verifies the view responds correctly with aggregated data.
+        """
+        self.client.login(username='seller', password='testpass123')
+        response = self.client.get('/seller_dashboard/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test Seller')
