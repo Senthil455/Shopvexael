@@ -51,7 +51,7 @@ class ChangePasswordForm(forms.Form):
 
     def clean_current_password(self):
         current = self.cleaned_data.get('current_password')
-        if current and not self.user.check_password(current):
+        if current and self.user and not self.user.check_password(current):
             raise forms.ValidationError("Current password is incorrect.")
         return current
 

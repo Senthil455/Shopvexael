@@ -202,6 +202,54 @@ class ViewTests(TestCase):
         response = self.client.get('/change_password/')
         self.assertEqual(response.status_code, 200)
 
+    def test_change_password_post_success(self):
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.post('/change_password/', {
+            'current_password': 'testpass123',
+            'new_password': 'newsecurepass1',
+            'confirm_password': 'newsecurepass1'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Password updated successfully')
+        u = User.objects.get(username='testuser')
+        self.assertTrue(u.check_password('newsecurepass1'))
+
+    def test_change_password_wrong_current(self):
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.post('/change_password/', {
+            'current_password': 'wrongpassword',
+            'new_password': 'newsecurepass1',
+            'confirm_password': 'newsecurepass1'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Current password is incorrect')
+        u = User.objects.get(username='testuser')
+        self.assertTrue(u.check_password('testpass123'))
+
+    def test_change_password_mismatch(self):
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.post('/change_password/', {
+            'current_password': 'testpass123',
+            'new_password': 'newpass1',
+            'confirm_password': 'differentpass1'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'do not match')
+        u = User.objects.get(username='testuser')
+        self.assertTrue(u.check_password('testpass123'))
+
+    def test_change_password_too_short(self):
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.post('/change_password/', {
+            'current_password': 'testpass123',
+            'new_password': 'short',
+            'confirm_password': 'short'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'at least 8 characters')
+        u = User.objects.get(username='testuser')
+        self.assertTrue(u.check_password('testpass123'))
+
     def test_wishlist_page_requires_auth(self):
         response = self.client.get('/wishlist/')
         self.assertRedirects(response, '/login/')
