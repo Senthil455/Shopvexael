@@ -29,7 +29,7 @@ def notify_order_update(order):
         user=order.customer.user,
         title=f"Order Update: #{order.id}",
         message=f"Your order status has been updated to: {order.get_status_display()}",
-        link=f"/tracker/?order_id={order.id}&email={order.customer.email}"
+        link=f"/tracker/?order_id={order.id}"
     )
     
     # Send Email
