@@ -45,8 +45,35 @@ class ContactForm(forms.Form):
 
 
 class ChangePasswordForm(forms.Form):
-    current_password = forms.CharField(widget=forms.PasswordInput)
-    new_password = forms.CharField(widget=forms.PasswordInput)
+    current_password = forms.CharField(widget=forms.PasswordInput, label="Current Password")
+    new_password = forms.CharField(widget=forms.PasswordInput, label="New Password")
+    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm New Password")
+
+    def clean_current_password(self):
+        current = self.cleaned_data.get('current_password')
+        if current and self.user and not self.user.check_password(current):
+            raise forms.ValidationError("Current password is incorrect.")
+        return current
+
+    def clean_new_password(self):
+        new = self.cleaned_data.get('new_password')
+        if new and len(new) < 8:
+            raise forms.ValidationError("Password must be at least 8 characters long.")
+        if new and new.isnumeric():
+            raise forms.ValidationError("Password cannot be entirely numeric.")
+        return new
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new = cleaned_data.get('new_password')
+        confirm = cleaned_data.get('confirm_password')
+        if new and confirm and new != confirm:
+            raise forms.ValidationError("New password and confirm password do not match.")
+        return cleaned_data
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
 
 
 class CheckoutForm(forms.Form):

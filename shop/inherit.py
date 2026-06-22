@@ -4,7 +4,10 @@ from shop.models import *
 def cartData(request):
     unread_notifications = 0
     if request.user.is_authenticated:
-        customer, created = Customer.objects.get_or_create(user=request.user, email=request.user.email, name=request.user.username)
+        customer, created = Customer.objects.get_or_create(
+            user=request.user,
+            defaults={'email': request.user.email, 'name': request.user.username}
+        )
         order, created = Order.objects.get_or_create(customer=customer, complete=False)
         items = order.orderitem_set.all()
         cartItems = order.get_cart_items
