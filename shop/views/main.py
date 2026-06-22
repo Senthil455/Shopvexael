@@ -1,6 +1,6 @@
 from django.http.response import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import *
+from shop.models import *
 from django.http import JsonResponse
 import json
 import logging
@@ -8,14 +8,14 @@ from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 from django.contrib.auth import authenticate, login, logout
-from . inherit import cartData
+from shop.inherit import cartData
 from django.db.models import Q, Sum, Count
 from django.db.models.functions import TruncDate
 from django.core.paginator import Paginator
 from django.utils.timezone import now, timedelta
 from functools import wraps
-from .utils import notify_order_update, notify_seller_approval
-from .forms import RegisterForm, LoginForm, ContactForm, CheckoutForm, SellerSignupForm, SellerProductForm, SellerSettingsForm, ChangePasswordForm
+from shop.utils import notify_order_update, notify_seller_approval
+from shop.forms import RegisterForm, LoginForm, ContactForm, CheckoutForm, SellerSignupForm, SellerProductForm, SellerSettingsForm, ChangePasswordForm
 
 def seller_required(f):
     @wraps(f)

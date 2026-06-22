@@ -6,9 +6,13 @@
 <div class="auth-container" style="max-width: 500px;">
     <h2 style="text-align: center; margin-bottom: 30px;">Create an Account</h2>
     
-    {% if alert %}
+    {% if form.errors %}
     <div style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red); padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: center; border: 1px solid var(--accent-red);">
-        Passwords do not match. Please try again.
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                {{ error }}<br>
+            {% endfor %}
+        {% endfor %}
     </div>
     {% endif %}
 

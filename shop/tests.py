@@ -125,7 +125,7 @@ class ViewTests(TestCase):
     def test_login_post_failure(self):
         response = self.client.post('/login/', {'username': 'testuser', 'password': 'wrong'})
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'alert')
+        self.assertContains(response, 'Username or Password is incorrect')
 
     def test_register_page(self):
         response = self.client.get('/register/')
@@ -153,6 +153,16 @@ class ViewTests(TestCase):
         })
         self.assertContains(response, 'alert')
         self.assertTrue(Contact.objects.filter(name='John').exists())
+
+    def test_register_duplicate_email_rejected(self):
+        response = self.client.post('/register/', {
+            'username': 'anotheruser', 'full_name': 'Another User',
+            'email': 'test@example.com', 'phone_number': '',
+            'password1': 'testpass123', 'password2': 'testpass123'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'email already exists')
+        self.assertFalse(User.objects.filter(username='anotheruser').exists())
 
     def test_register_password_mismatch(self):
         response = self.client.post('/register/', {
