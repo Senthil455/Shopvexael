@@ -347,4 +347,4 @@ def update_seller_rating(sender, instance, **kwargs):
     avg = Review.objects.filter(product__seller=instance.product.seller).aggregate(
         avg_rating=Avg('rating')
     )['avg_rating']
-    Seller.objects.filter(id=instance.product.seller.id).update(rating=avg_rating or 0.0)
+    Seller.objects.filter(id=instance.product.seller.id).update(rating=avg or 0.0)
