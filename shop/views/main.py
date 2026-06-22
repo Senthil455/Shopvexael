@@ -464,11 +464,50 @@ def seller_add_product(request):
     if request.method == 'POST':
         form = SellerProductForm(request.POST, request.FILES)
         if not form.is_valid():
-            return render(request, 'seller_add_product.html', {
+            context = {
+                'seller': seller, 'cartItems': cartItems, 'categories': categories,
+                'subcategories': subcategories, 'brands': brands,
+                'is_delete_enabled': False, 'form': form,
+            }
+            return render(request, 'seller_add_product.html', context)
+
+        cd = form.cleaned_data
+        offer_percentage = 0
+        if cd.get('discount_price'):
+            p = float(cd['price'])
+            dp = float(cd['discount_price'])
+            if p > dp:
+                offer_percentage = ((p - dp) / p) * 100
+
+        product = Product.objects.create(
+            seller=seller, name=cd['name'], sku=cd.get('sku', ''),
+            category=cd['category'],
+            subcategory=cd['subcategory'],
+            brand=cd['brand'],
+            short_description=cd.get('short_description', ''),
+            description=cd.get('description', ''),
+            price=cd['price'],
+            discount_price=cd.get('discount_price'),
+            offer_percentage=offer_percentage, stock=cd['stock'],
+            tags=cd.get('tags', ''), image=request.FILES.get('image')
+        )
+
+        InventoryLog.objects.create(
+            product=product,
+            action='MANUAL',
+            quantity_changed=cd['stock'],
+            previous_stock=0,
+            new_stock=cd['stock'],
+            notes="Initial stock on product creation"
+        )
+
+        return redirect('/seller_products/')
+
+    context = {
         'seller': seller, 'cartItems': cartItems, 'categories': categories,
         'subcategories': subcategories, 'brands': brands,
-        'is_delete_enabled': False, 'form': SellerProductForm()
-        }
+        'is_delete_enabled': False, 'form': SellerProductForm(),
+    }
     return render(request, 'seller_add_product.html', context)
 
 @admin_required

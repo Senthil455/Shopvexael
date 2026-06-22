@@ -257,3 +257,45 @@ class ViewTests(TestCase):
     def test_profile_page_requires_auth(self):
         response = self.client.get('/profile/')
         self.assertRedirects(response, '/login/')
+
+    def test_cartdata_survives_user_email_change(self):
+        """
+        Regression test for issue #60: cartData must not crash with
+        IntegrityError after the user's email is updated.
+        """
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get('/cart/')
+        self.assertEqual(response.status_code, 200)
+
+        original_customer = Customer.objects.get(user=self.user)
+        original_email = original_customer.email
+
+        self.user.email = 'updated_email@example.com'
+        self.user.save()
+
+        response = self.client.get('/cart/')
+        self.assertEqual(response.status_code, 200)
+
+        same_customer = Customer.objects.get(user=self.user)
+        self.assertEqual(same_customer.id, original_customer.id)
+        self.assertEqual(same_customer.email, original_email)
+
+    def test_cartdata_survives_username_change(self):
+        """
+        Regression test: same as email change but for username, which
+        is used as default for Customer.name.
+        """
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get('/cart/')
+        self.assertEqual(response.status_code, 200)
+
+        original_customer = Customer.objects.get(user=self.user)
+
+        self.user.username = 'newname'
+        self.user.save()
+
+        response = self.client.get('/cart/')
+        self.assertEqual(response.status_code, 200)
+
+        same_customer = Customer.objects.get(user=self.user)
+        self.assertEqual(same_customer.id, original_customer.id)
