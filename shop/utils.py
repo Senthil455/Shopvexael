@@ -1,5 +1,4 @@
 import logging
-import time
 from functools import wraps
 from django.core.mail import send_mail
 from django.http import JsonResponse
@@ -38,7 +37,10 @@ def notify_order_update(order):
     context = {'order': order}
     send_custom_email(subject, 'emails/order_update.html', context, [order.customer.email])
 
+from django.core.cache import cache
+
 # Simple in-memory rate limiter (per-view, per-IP)
+# Deprecated: use cache-based rate_limit below for production deployments
 _rate_limit_store = {}
 
 def rate_limit(max_requests=10, window_seconds=60):
@@ -46,16 +48,11 @@ def rate_limit(max_requests=10, window_seconds=60):
         @wraps(view_func)
         def wrapped(request, *args, **kwargs):
             ip = request.META.get('REMOTE_ADDR', 'unknown')
-            key = f"{view_func.__name__}:{ip}"
-            now = time.time()
-            window_start = now - window_seconds
-            if key in _rate_limit_store:
-                _rate_limit_store[key] = [t for t in _rate_limit_store[key] if t > window_start]
-                if len(_rate_limit_store[key]) >= max_requests:
-                    return JsonResponse({'error': 'Rate limit exceeded. Try again later.'}, status=429)
-                _rate_limit_store[key].append(now)
-            else:
-                _rate_limit_store[key] = [now]
+            key = f"ratelimit:{view_func.__name__}:{ip}"
+            count = cache.get(key, 0)
+            if count >= max_requests:
+                return JsonResponse({'error': 'Rate limit exceeded. Try again later.'}, status=429)
+            cache.set(key, count + 1, window_seconds)
             return view_func(request, *args, **kwargs)
         return wrapped
     return decorator
