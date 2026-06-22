@@ -511,7 +511,13 @@ def admin_dashboard(request):
     pending_approvals = unverified_sellers.count()
     all_orders = Order.objects.filter(complete=True).order_by('-date_ordered')
     pending_orders = all_orders.count()
-    total_revenue = sum([order.get_cart_total for order in all_orders])
+    total_revenue = all_orders.aggregate(
+        total=Sum(models.F('orderitem__quantity') * models.Case(
+            models.When(orderitem__product__discount_price__isnull=False, then=models.F('orderitem__product__discount_price')),
+            default=models.F('orderitem__product__price'),
+            output_field=models.FloatField()
+        ))
+    )['total'] or 0.0
     platform_commission = float(total_revenue) * 0.1
     new_today = User.objects.filter(date_joined__date=now().date()).count()
     context = {
@@ -535,11 +541,18 @@ def seller_orders(request):
     if order_search:
         orders_qs = orders_qs.filter(Q(id__icontains=order_search) | Q(customer__name__icontains=order_search))
     
-    orders_data = []
-    for order in orders_qs:
-        items = order_items.filter(order=order)
-        seller_total = sum([item.get_total for item in items])
-        orders_data.append({'order': order, 'items': items, 'seller_total': seller_total})
+    orders_qs = orders_qs.prefetch_related(
+        models.Prefetch('orderitem_set', queryset=order_items, to_attr='seller_items')
+    ).annotate(
+        seller_revenue=Sum(models.F('orderitem__quantity') * models.Case(
+            models.When(orderitem__product__seller=seller, orderitem__product__discount_price__isnull=False, then=models.F('orderitem__product__discount_price')),
+            models.When(orderitem__product__seller=seller, then=models.F('orderitem__product__price')),
+            default=0,
+            output_field=models.FloatField()
+        ))
+    )
+    
+    orders_data = [{'order': o, 'items': getattr(o, 'seller_items', []), 'seller_total': o.seller_revenue or 0} for o in orders_qs]
     
     context = {'seller': seller, 'orders': orders_data, 'cartItems': cartItems}
     return render(request, 'seller_orders.html', context)
@@ -666,7 +679,13 @@ def seller_analytics(request):
     cartItems = data['cartItems']
     
     seller_order_items = OrderItem.objects.filter(product__seller=seller, order__complete=True)
-    total_revenue = sum([item.get_total for item in seller_order_items])
+    total_revenue = seller_order_items.aggregate(
+        total=Sum(models.F('quantity') * models.Case(
+            models.When(product__discount_price__isnull=False, then=models.F('product__discount_price')),
+            default=models.F('product__price'),
+            output_field=models.FloatField()
+        ))
+    )['total'] or 0.0
     
     order_ids = seller_order_items.values_list('order_id', flat=True).distinct()
     total_orders = len(order_ids)
@@ -685,8 +704,20 @@ def seller_analytics(request):
         order__date_ordered__lt=this_month_start
     )
 
-    last_month_revenue = sum([item.get_total for item in last_month_items])
-    this_month_revenue = sum([item.get_total for item in this_month_items])
+    last_month_revenue = last_month_items.aggregate(
+        total=Sum(models.F('quantity') * models.Case(
+            models.When(product__discount_price__isnull=False, then=models.F('product__discount_price')),
+            default=models.F('product__price'),
+            output_field=models.FloatField()
+        ))
+    )['total'] or 0.0
+    this_month_revenue = this_month_items.aggregate(
+        total=Sum(models.F('quantity') * models.Case(
+            models.When(product__discount_price__isnull=False, then=models.F('product__discount_price')),
+            default=models.F('product__price'),
+            output_field=models.FloatField()
+        ))
+    )['total'] or 0.0
     
     growth = 0
     if last_month_revenue > 0:
