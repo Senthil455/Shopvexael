@@ -1,5 +1,5 @@
 import json
-from . models import *
+from shop.models import *
 
 def cartData(request):
     unread_notifications = 0

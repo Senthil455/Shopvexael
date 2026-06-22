@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
-from .models import Notification
+from shop.models import Notification
 
 logger = logging.getLogger(__name__)
 
