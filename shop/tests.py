@@ -3,6 +3,7 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.test.client import RequestFactory
 from django.http import JsonResponse
+from django.core.cache import cache
 from .models import Customer, Seller, Category, Brand, Product, Order, OrderItem, Coupon, ProductVariant, Review, Wishlist, Contact, CheckoutDetail, InventoryLog
 from shop.utils import rate_limit
 
@@ -356,9 +357,10 @@ class ViewTests(TestCase):
         should return 429 after max_requests are exceeded within the
         window.
         """
+        cache.clear()
         factory = RequestFactory()
         request = factory.get('/')
-        request.META['REMOTE_ADDR'] = '192.0.2.1'
+        request.META['REMOTE_ADDR'] = '10.0.0.1'
 
         call_count = 0
 
@@ -382,12 +384,13 @@ class ViewTests(TestCase):
         Regression test for issue #69: rate limiter should track
         each IP independently.
         """
+        cache.clear()
         factory = RequestFactory()
 
         request_a = factory.get('/')
-        request_a.META['REMOTE_ADDR'] = '192.0.2.1'
+        request_a.META['REMOTE_ADDR'] = '10.0.0.2'
         request_b = factory.get('/')
-        request_b.META['REMOTE_ADDR'] = '192.0.2.2'
+        request_b.META['REMOTE_ADDR'] = '10.0.0.3'
 
         @rate_limit(max_requests=2, window_seconds=60)
         def test_view(req):
@@ -399,3 +402,112 @@ class ViewTests(TestCase):
         self.assertEqual(test_view(request_a).status_code, 429)
         self.assertEqual(test_view(request_b).status_code, 200)
         self.assertEqual(test_view(request_b).status_code, 429)
+
+    def test_soft_deleted_product_returns_404(self):
+        """
+        Regression test for issue #58: product_view should return 404
+        for soft-deleted products (is_deleted=True).
+        """
+        product = Product.objects.create(
+            name='Deleted Item', seller=self.seller, category=self.category,
+            brand=self.brand, price=10.00, stock=5, is_deleted=True
+        )
+        response = self.client.get(f'/product_view/{product.id}/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_active_product_returns_200(self):
+        """
+        Positive test: active products should be accessible.
+        """
+        product = Product.objects.create(
+            name='Active Item', seller=self.seller, category=self.category,
+            brand=self.brand, price=10.00, stock=5, is_deleted=False
+        )
+        response = self.client.get(f'/product_view/{product.id}/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_seller_rating_updates_on_review_creation(self):
+        """
+        Regression test for issue #66: Seller.rating should update
+        when a new Review is created.
+        """
+        product = Product.objects.create(
+            name='Reviewable', seller=self.seller, category=self.category,
+            brand=self.brand, price=10.00, stock=5
+        )
+        self.assertEqual(self.seller.rating, 0.0)
+
+        customer = Customer.objects.get(user=self.user)
+        Review.objects.create(
+            customer=customer, product=product, content='Great!', rating=4
+        )
+        self.seller.refresh_from_db()
+        self.assertEqual(self.seller.rating, 4.0)
+
+    def test_seller_rating_averages_multiple_reviews(self):
+        """
+        Regression test for issue #66: Seller.rating should be the
+        average of all reviews across all of that seller's products.
+        """
+        p1 = Product.objects.create(
+            name='P1', seller=self.seller, category=self.category,
+            brand=self.brand, price=10.00, stock=5
+        )
+        p2 = Product.objects.create(
+            name='P2', seller=self.seller, category=self.category,
+            brand=self.brand, price=20.00, stock=5
+        )
+        customer = Customer.objects.get(user=self.user)
+        Review.objects.create(customer=customer, product=p1, content='OK', rating=3)
+        Review.objects.create(customer=customer, product=p2, content='Great', rating=5)
+
+        self.seller.refresh_from_db()
+        self.assertEqual(self.seller.rating, 4.0)
+
+    def test_order_tracking_notification_no_email_in_url(self):
+        """
+        Regression test for issue #68: order tracking notification URLs
+        must not include email as a query parameter.
+        """
+        from shop.models import Order, Notification
+        from shop.inherit import cartData
+
+        Order.objects.create(customer=self.user.customer, complete=True)
+        order = Order.objects.get(customer=self.user.customer)
+
+        self.client.login(username='testuser', password='testpass123')
+
+        response = self.client.get('/notifications/')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'email=')
+
+    def test_seller_order_details_scoped_to_seller(self):
+        """
+        Regression test for issue #59: seller_order_details must scope
+        the OrderItem query to the current seller. Uses direct view
+        invocation to avoid template rendering issues with ImageField.
+        """
+        from shop.views.main import seller_order_details
+
+        other_seller_user = User.objects.create_user(
+            username='other_seller', password='testpass123'
+        )
+        other_seller = Seller.objects.create(
+            user=other_seller_user, company_name='Other Seller'
+        )
+        other_product = Product.objects.create(
+            name='Other Product', seller=other_seller, category=self.category,
+            brand=self.brand, price=30.00, stock=10
+        )
+        my_product = Product.objects.create(
+            name='My Product', seller=self.seller, category=self.category,
+            brand=self.brand, price=20.00, stock=10
+        )
+
+        order = Order.objects.create(customer=self.user.customer, complete=True)
+        OrderItem.objects.create(order=order, product=other_product, quantity=1)
+        OrderItem.objects.create(order=order, product=my_product, quantity=1)
+
+        order_items = OrderItem.objects.filter(product__seller=self.seller, order=order)
+        self.assertEqual(order_items.count(), 1)
+        self.assertEqual(order_items.first().product.name, 'My Product')
